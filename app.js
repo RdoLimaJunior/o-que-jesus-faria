@@ -168,23 +168,37 @@
     if (btn) btn.dataset.label = origLabel;
 
     try {
+      const apiKey = window.API_CONFIG?.ELEVEN_LABS_API_KEY;
+      if (!apiKey) {
+        throw new Error('ElevenLabs API key não configurada');
+      }
+
       if (btn) {
         const labelEl = btn.querySelector('.speak-label');
         if (labelEl) labelEl.textContent = 'Carregando…';
         btn.classList.add('playing');
         currentBtn = btn;
       }
-      const res = await fetch('/api/speak', {
+
+      const res = await fetch(`${window.API_CONFIG.endpoints.elevenLabs}/${voice}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text, voice_id: voice })
+        headers: {
+          'Content-Type': 'application/json',
+          'xi-api-key': apiKey
+        },
+        body: JSON.stringify({
+          text,
+          model_id: 'eleven_monolingual_v1',
+          voice_settings: { stability: 0.5, similarity_boost: 0.75 }
+        })
       });
+
       if (!res.ok) {
-        throw new Error('api proxy status ' + res.status);
+        throw new Error(`ElevenLabs error ${res.status}`);
       }
+
       const buf = await res.arrayBuffer();
       const ctx = new (window.AudioContext || window.webkitAudioContext)();
-      currentAudioCtx = ctx;
       const audioBuf = await ctx.decodeAudioData(buf);
       const src = ctx.createBufferSource();
       src.buffer = audioBuf;
@@ -306,26 +320,71 @@
     askBtn.disabled = true;
 
     try {
-      const res = await fetch('/api/wisdom', {
+      const apiKey = window.API_CONFIG?.GEMINI_API_KEY;
+      if (!apiKey) {
+        throw new Error('Chave de API do Gemini não configurada');
+      }
+
+      const systemPrompt = `Você é uma voz amorosa e sábia que reflete os ensinamentos de Jesus Cristo no Evangelho.
+
+REGRAS:
+- Tom caloroso, simples, como um amigo sábio.
+- Frases curtas, palavras simples, sem jargões teológicos.
+- Em PORTUGUÊS DO BRASIL.
+
+Para qualquer situação:
+1. Conselho de como Cristo aconselharia (3 a 4 frases simples).
+2. UM versículo bíblico curto dos Evangelhos ou Epístolas.
+
+Responda APENAS em JSON válido (sem markdown, sem comentários):
+{"conselho": "...", "versiculo": "...", "referencia": "Livro Cap:Ver"}`;
+
+      const url = new URL(window.API_CONFIG.endpoints.gemini);
+      url.searchParams.append('key', apiKey);
+
+      const res = await fetch(url.toString(), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ situation })
+        body: JSON.stringify({
+          system_instruction: {
+            parts: { text: systemPrompt }
+          },
+          contents: {
+            parts: { text: situation }
+          }
+        })
       });
 
       if (!res.ok) {
         const errorData = await res.text();
-        try {
-          const errorJson = JSON.parse(errorData);
-          throw new Error(`Status ${res.status}: ${errorJson.error}`);
-        } catch (e) {
-          throw new Error(`Status ${res.status}: ${errorData || 'Resposta vazia'}`);
-        }
+        throw new Error(`Status ${res.status}: Erro ao chamar Gemini API`);
       }
 
-      const parsed = await res.json();
+      const data = await res.json();
+      const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
 
-      if (!parsed.conselho) {
-        throw new Error('Resposta inválida do servidor');
+      if (!generatedText) {
+        throw new Error('Resposta vazia do Gemini');
+      }
+
+      const clean = String(generatedText).replace(/```json|```/g, '').trim();
+      const start = clean.indexOf('{');
+      const end = clean.lastIndexOf('}');
+
+      if (start === -1 || end === -1) {
+        throw new Error('Formato de resposta inválido');
+      }
+
+      const jsonStr = clean.slice(start, end + 1);
+      let parsed;
+      try {
+        parsed = JSON.parse(jsonStr);
+      } catch (parseErr) {
+        throw new Error('Resposta do Gemini está malformada');
+      }
+
+      if (!parsed.conselho || !parsed.versiculo) {
+        throw new Error('Resposta do Gemini incompleta');
       }
 
       counselTextEl.textContent = parsed.conselho || '';
@@ -506,7 +565,7 @@
   }
 
 
-  // Load psalm text from serverless API (protegido)
+  // Load psalm text from Bible API
   async function getPsalmText(psalmNumber) {
     const cached = await getPsalmFromDB(psalmNumber);
     if (cached && cached.texto) {
@@ -519,32 +578,54 @@
     }
 
     try {
-      const res = await fetch('/api/psalms', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ numero: psalmNumber })
+      const apiKey = window.API_CONFIG?.BIBLE_API_KEY;
+      if (!apiKey) {
+        return `[Salmo ${psalmNumber} - Chave de API não configurada.]`;
+      }
+
+      const searchUrl = `${window.API_CONFIG.endpoints.bible}/search?query=psalm%20${psalmNumber}&limit=1`;
+      const searchRes = await fetch(searchUrl, {
+        headers: { 'api-key': apiKey }
       });
 
-      if (!res.ok) {
+      if (!searchRes.ok) {
         return `[Salmo ${psalmNumber} - Texto não disponível.]`;
       }
 
-      const { texto } = await res.json();
-      if (texto) {
-        await savePsalmToDB({
-          numero: psalmNumber,
-          titulo: psalm?.titulo || `Salmo ${psalmNumber}`,
-          texto: texto,
-          tipo: psalm?.tipo || 'Desconhecido',
-          autor: psalm?.autor || 'Desconhecido'
-        });
-        return texto;
+      const searchData = await searchRes.json();
+      if (!searchData.results || searchData.results.length === 0) {
+        return `[Salmo ${psalmNumber} - Não encontrado.]`;
       }
-    } catch (err) {
-      // silently fail and return fallback
-    }
 
-    return `[Salmo ${psalmNumber} - Meditação disponível.]`;
+      const verseId = searchData.results[0].verseId;
+      const textUrl = `${window.API_CONFIG.endpoints.bible}/verses/${verseId}?content-type=text`;
+      const textRes = await fetch(textUrl, {
+        headers: { 'api-key': apiKey }
+      });
+
+      if (!textRes.ok) {
+        return `[Salmo ${psalmNumber} - Erro ao buscar texto.]`;
+      }
+
+      const textData = await textRes.json();
+      const texto = textData.data?.content || '';
+
+      if (!texto) {
+        return `[Salmo ${psalmNumber} - Texto vazio.]`;
+      }
+
+      await savePsalmToDB({
+        numero: psalmNumber,
+        titulo: psalm?.titulo || `Salmo ${psalmNumber}`,
+        texto: texto,
+        tipo: psalm?.tipo || 'Desconhecido',
+        autor: psalm?.autor || 'Desconhecido'
+      });
+
+      return texto;
+    } catch (err) {
+      return `[Salmo ${psalmNumber} - Erro ao carregar.]`;
+    }
   }
 
   // Load psalms metadata (titles, authors, types only)
