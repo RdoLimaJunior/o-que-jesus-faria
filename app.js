@@ -56,7 +56,7 @@
     { id: 'EXAVITQu4vr4xnSDxMaL', name: 'Sarah',    desc: 'Serena e contemplativa' },
   ];
 
-  const EMBEDDED_KEY = ''; // Removido por segurança. Insira sua chave nas configurações do app.
+  const EMBEDDED_KEY = 'a6de55b0724f02d9fae3b6427310501c7916337ca3589f47520e53b41702c48f';
   let elevenLabsApiKey = localStorage.getItem('elevenLabsKey') || EMBEDDED_KEY;
   let elevenLabsVoiceId = localStorage.getItem('elevenLabsVoiceId') || VOICES[0].id;
   const useElevenLabs = () => !!elevenLabsApiKey;
