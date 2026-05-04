@@ -330,14 +330,18 @@
 
       counselTextEl.textContent = parsed.conselho || '';
       verseTextEl.textContent = `"${parsed.versiculo || ''}"`;
+      verseTextEl.setAttribute('aria-label', `Citação: ${parsed.versiculo || ''}`);
 
+      let readableRef = '';
       if (parsed.referencia) {
         verseRefEl.textContent = `— ${parsed.referencia}`;
         const refMatch = parsed.referencia.match(/(.+?)\s+(\d+):(\d+)/);
         if (refMatch) {
           const [, livro, cap, ver] = refMatch;
-          const ariaLabel = `${livro}, capítulo ${cap}, versículo ${ver}`;
-          verseRefEl.setAttribute('aria-label', ariaLabel);
+          readableRef = `${livro}, capítulo ${cap}, versículo ${ver}`;
+          verseRefEl.setAttribute('aria-label', readableRef);
+        } else {
+          readableRef = parsed.referencia;
         }
       } else {
         verseRefEl.textContent = '';
@@ -350,7 +354,7 @@
       steps[0].classList.remove('active');
       steps[1].classList.add('active');
 
-      fullResponseText = `${parsed.conselho} ... Palavra de Deus: ${parsed.versiculo} ${parsed.referencia || ''}`;
+      fullResponseText = `${parsed.conselho}. Palavra de Deus: ${parsed.versiculo}. ${readableRef}`;
     } catch (err) {
       errorMsgEl.textContent = '✦ Erro: ' + (err.message || 'Não foi possível conectar ao servidor. Verifique sua conexão.');
       errorMsgEl.hidden = false;
@@ -644,12 +648,23 @@
   const devotion = DEVOTIONS[dayIndex()];
   document.getElementById('devotionDate').textContent = formatDate();
   document.getElementById('devotionVerse').textContent = devotion.v;
-  document.getElementById('devotionRef').textContent = `— ${devotion.r}`;
+
+  const devotionRefEl = document.getElementById('devotionRef');
+  devotionRefEl.textContent = `— ${devotion.r}`;
+
+  const refMatch = devotion.r.match(/(.+?)\s+(\d+):(\d+)/);
+  let readableDevotionRef = devotion.r;
+  if (refMatch) {
+    const [, livro, cap, ver] = refMatch;
+    readableDevotionRef = `${livro}, capítulo ${cap}, versículo ${ver}`;
+    devotionRefEl.setAttribute('aria-label', readableDevotionRef);
+  }
+
   document.getElementById('devotionReflection').textContent = devotion.re;
 
   const devotionSpeakBtn = document.getElementById('devotionSpeakBtn');
   devotionSpeakBtn.addEventListener('click', () => {
-    const txt = `Versículo do dia. ${devotion.v}. ${devotion.r}. Reflexão. ${devotion.re}`;
+    const txt = `Versículo do dia. ${devotion.v}. ${readableDevotionRef}. Reflexão. ${devotion.re}`;
     speakText(txt, devotionSpeakBtn);
   });
 

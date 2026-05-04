@@ -128,9 +128,9 @@
       <p class="loading-text">Meditando nos ensinamentos de Cristo…</p>
     </div>
 
-    <div class="error-msg" id="errorMsg" hidden></div>
+    <div class="error-msg" id="errorMsg" hidden aria-live="assertive" role="alert"></div>
 
-    <div id="responseArea" hidden>
+    <div id="responseArea" hidden aria-live="polite" aria-atomic="true" role="status">
       <div class="response-card">
         <div class="response-header">
           <div class="response-mark">☩</div>
@@ -139,7 +139,7 @@
         <p class="counsel-text" id="counselText"></p>
         <div class="verse-block">
           <div class="verse-label">Palavra de Deus</div>
-          <p class="verse-text" id="verseText"></p>
+          <p class="verse-text" id="verseText" role="doc-quote"></p>
           <p class="verse-ref" id="verseRef"></p>
         </div>
         <button class="speak-btn" id="speakBtn">
@@ -240,8 +240,8 @@
     <div class="card devotion-card">
       <div class="devotion-date" id="devotionDate"></div>
       <div class="devotion-eyebrow">Versículo do Dia</div>
-      <blockquote class="devotion-verse" id="devotionVerse"></blockquote>
-      <div class="devotion-ref" id="devotionRef"></div>
+      <blockquote class="devotion-verse" id="devotionVerse" role="doc-quote"></blockquote>
+      <div class="devotion-ref" id="devotionRef" role="doc-reference"></div>
 
       <div class="divider-soft" aria-hidden="true"></div>
 
