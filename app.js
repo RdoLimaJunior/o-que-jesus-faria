@@ -584,11 +584,12 @@
     }
   }
 
-  // Load psalm text from Bible API if not in local JSON
+  // Load psalm text from serverless API (protegido)
   async function getPsalmText(psalmNumber) {
     // Try IndexedDB first
     const cached = await getPsalmFromDB(psalmNumber);
     if (cached && cached.texto) {
+      console.log(`✅ Salmo ${psalmNumber} carregado do cache`);
       return cached.texto;
     }
 
@@ -597,29 +598,32 @@
       return psalm.text;
     }
 
-    // Try to fetch from Bible API
+    // Fetch from our serverless API
     try {
-      console.log(`📖 Buscando Salmo ${psalmNumber} na Bible API...`);
-      const res = await fetch(`https://api.api-bible.com/v1/bibles/de4e12af7f28f599-02/search?query=psalm%20${psalmNumber}&limit=1`, {
-        headers: { 'api-key': 'b10b3f42f86d5db3f8c1e6a8b6f5d9c4e2a1f7b3' }
-      }).catch(() => null);
+      console.log(`📖 Carregando Salmo ${psalmNumber}...`);
+      const res = await fetch('/api/psalms', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ numero: psalmNumber })
+      });
 
-      if (res && res.ok) {
-        const data = await res.json();
-        if (data.results && data.results.length > 0) {
-          const verseId = data.results[0].verseId;
-          const verseRes = await fetch(`https://api.api-bible.com/v1/bibles/de4e12af7f28f599-02/verses/${verseId}?content-type=text`, {
-            headers: { 'api-key': 'b10b3f42f86d5db3f8c1e6a8b6f5d9c4e2a1f7b3' }
-          });
-          if (verseRes.ok) {
-            const verseData = await verseRes.json();
-            const text = verseData.data?.content || null;
-            if (text) {
-              if (psalm) psalm.text = text;
-              return text;
-            }
-          }
-        }
+      if (!res.ok) {
+        const error = await res.json();
+        console.error(`Erro ao buscar Salmo ${psalmNumber}:`, error);
+        return `[Salmo ${psalmNumber} - Texto não disponível.]`;
+      }
+
+      const { texto } = await res.json();
+      if (texto) {
+        // Salvar no DB para próximas vezes
+        await savePsalmToDB({
+          numero: psalmNumber,
+          titulo: psalm?.titulo || `Salmo ${psalmNumber}`,
+          texto: texto,
+          tipo: psalm?.tipo || 'Desconhecido',
+          autor: psalm?.autor || 'Desconhecido'
+        });
+        return texto;
       }
     } catch (err) {
       console.error(`Erro ao buscar Salmo ${psalmNumber}:`, err);
@@ -628,7 +632,42 @@
     return `[Salmo ${psalmNumber} - Meditação disponível.]`;
   }
 
-  loadPsalms();
+  // Carregar apenas metadata (sem textos)
+  async function loadPsalmsMetadata() {
+    try {
+      const res = await fetch('/salmos.json');
+      if (!res.ok) throw new Error('Failed to load salmos.json');
+      const { salmos } = await res.json();
+      psalmsData = salmos;
+
+      salmos.forEach(s => {
+        psalmsDb[s.numero] = {
+          titulo: s.titulo,
+          tipo: s.tipo,
+          autor: s.autor,
+          intro: `${s.titulo}\n\nAutor: ${s.autor}\nTipo: ${s.tipo}\n\nEste Salmo oferece consolo, força e esperança através da Palavra de Deus.`,
+          text: s.texto || null,
+          numero: s.numero
+        };
+      });
+
+      // Populate select
+      const select = document.getElementById('psalmSelect');
+      select.innerHTML = '<option value="">— Escolha um Salmo para Meditar —</option>';
+      salmos.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s.numero;
+        opt.textContent = `Salmo ${s.numero} — ${s.titulo}`;
+        select.appendChild(opt);
+      });
+
+      console.log('✅ Metadata dos 150 Salmos carregada');
+    } catch (err) {
+      console.error('Error loading psalms metadata:', err);
+    }
+  }
+
+  loadPsalmsMetadata();
 
   const psalmsDbOld = {
     23: {

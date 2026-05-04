@@ -78,12 +78,25 @@ Responda APENAS em JSON válido (sem markdown, sem comentários):
     }
 
     const jsonStr = clean.slice(start, end + 1);
-    const parsed = JSON.parse(jsonStr);
+
+    let parsed;
+    try {
+      parsed = JSON.parse(jsonStr);
+    } catch (parseErr) {
+      console.error('JSON parse error:', parseErr.message, 'Input:', jsonStr);
+      return res.status(500).json({ error: 'Resposta do Gemini está malformada' });
+    }
+
+    // Validate response structure
+    if (!parsed.conselho || !parsed.versiculo) {
+      console.error('Missing required fields in response:', parsed);
+      return res.status(500).json({ error: 'Resposta do Gemini incompleta' });
+    }
 
     return res.status(200).json({
-      conselho: parsed.conselho || '',
-      versiculo: parsed.versiculo || '',
-      referencia: parsed.referencia || ''
+      conselho: String(parsed.conselho).trim(),
+      versiculo: String(parsed.versiculo).trim(),
+      referencia: String(parsed.referencia || '').trim()
     });
 
   } catch (error) {
