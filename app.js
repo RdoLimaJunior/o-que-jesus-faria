@@ -311,11 +311,16 @@
   clearBtn.addEventListener('click', clearWisdom);
 
   async function askJesus() {
+    console.log('🔍 askJesus chamado');
+    console.log('situationEl:', situationEl);
+    console.log('situationEl.value:', situationEl.value);
+
     const situation = situationEl.value.trim();
-    console.log('📝 Situação digitada:', situation);
+    console.log('📝 Situação digitada (depois trim):', situation);
+    console.log('Comprimento:', situation.length);
 
     if (!situation) {
-      console.warn('⚠️ Campo vazio!');
+      console.warn('⚠️ Campo vazio! Foco devolvido ao textarea.');
       situationEl.focus();
       return;
     }
@@ -327,15 +332,17 @@
 
     try {
       const payload = { situation };
-      console.log('📤 Enviando para /api/wisdom:', payload);
+      const bodyText = JSON.stringify(payload);
+      console.log('📤 Payload:', payload);
+      console.log('📤 Body JSON:', bodyText);
 
       const res = await fetch('/api/wisdom', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        body: bodyText
       });
 
-      console.log('📥 Resposta do servidor:', res.status);
+      console.log('📥 Resposta do servidor: Status', res.status);
 
       if (!res.ok) {
         const errorData = await res.text();
