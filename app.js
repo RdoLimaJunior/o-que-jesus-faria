@@ -56,10 +56,9 @@
     { id: 'EXAVITQu4vr4xnSDxMaL', name: 'Sarah',    desc: 'Serena e contemplativa' },
   ];
 
-  const EMBEDDED_KEY = 'a6de55b0724f02d9fae3b6427310501c7916337ca3589f47520e53b41702c48f';
-  let elevenLabsApiKey = localStorage.getItem('elevenLabsKey') || EMBEDDED_KEY;
+  const elevenLabsApiKey = localStorage.getItem('elevenLabsKey'); // Opção de override local
   let elevenLabsVoiceId = localStorage.getItem('elevenLabsVoiceId') || VOICES[0].id;
-  const useElevenLabs = () => !!elevenLabsApiKey;
+  const useElevenLabs = () => true; // Agora tentamos sempre via nossa API na Vercel
 
   // populate voice grid
   const voiceGrid = document.getElementById('voiceGrid');
@@ -80,11 +79,8 @@
   }
   renderVoiceGrid();
 
-  const elevenLabsKeyInput = document.getElementById('elevenLabsKeyInput');
-
   function openSettings() {
     settingsModal.hidden = false;
-    elevenLabsKeyInput.value = elevenLabsApiKey;
     refreshStatus();
   }
 
@@ -98,20 +94,12 @@
 
   function refreshStatus() {
     apiStatus.hidden = false;
-    if (useElevenLabs()) {
-      apiStatus.className = 'status-pill success';
-      apiStatus.textContent = '✦ Voz divina ativa. Toque em "Ouvir" em qualquer texto.';
-    } else {
-      apiStatus.className = 'status-pill';
-      apiStatus.textContent = 'Usando voz nativa do dispositivo.';
-    }
+    apiStatus.className = 'status-pill success';
+    apiStatus.textContent = '✦ Voz divina configurada via Vercel.';
   }
 
   document.getElementById('saveSettingsBtn').addEventListener('click', () => {
-    elevenLabsApiKey = elevenLabsKeyInput.value.trim();
-    localStorage.setItem('elevenLabsKey', elevenLabsApiKey);
     localStorage.setItem('elevenLabsVoiceId', elevenLabsVoiceId);
-    
     refreshStatus();
     toast('Configurações salvas');
     setTimeout(closeSettings, 600);
@@ -195,19 +183,16 @@
           btn.classList.add('playing');
           currentBtn = btn;
         }
-        const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voice}`, {
+        const res = await fetch('/api/speak', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'xi-api-key': key },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             text,
-            model_id: 'eleven_multilingual_v2',
-            voice_settings: { stability: 0.55, similarity_boost: 0.75, style: 0.25, use_speaker_boost: true }
+            voice_id: voice
           })
         });
         if (!res.ok) {
-          if (res.status === 401) toast('Chave ElevenLabs inválida');
-          else toast('Erro do ElevenLabs: ' + res.status);
-          throw new Error('eleven status ' + res.status);
+          throw new Error('api proxy status ' + res.status);
         }
         const buf = await res.arrayBuffer();
         const ctx = new (window.AudioContext || window.webkitAudioContext)();
