@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#d4a843">
+<meta name="description" content="O que Jesus Faria? Sabedoria, Salmos e Devocional Diário.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="O Que Jesus Faria">
+<title>O Que Jesus Faria? — Sabedoria & Salmos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- ════════ CELESTIAL BACKGROUND ════════ -->
+<div class="heaven-bg" aria-hidden="true">
+  <div class="rays">
+    <div class="ray"></div><div class="ray"></div><div class="ray"></div>
+    <div class="ray"></div><div class="ray"></div><div class="ray"></div>
+    <div class="ray"></div><div class="ray"></div><div class="ray"></div>
+  </div>
+  <div class="cloud cloud-1"></div>
+  <div class="cloud cloud-2"></div>
+  <div class="cloud cloud-3"></div>
+  <div class="cloud cloud-4"></div>
+  <div class="particles" id="particles"></div>
+</div>
+
+<!-- ════════ INSTALL PROMPT (PWA) ════════ -->
+<div class="install-banner" id="installBanner" hidden>
+  <div class="install-banner__icon">✦</div>
+  <div class="install-banner__text">
+    <strong>Instalar aplicativo</strong>
+    <span>Tenha sabedoria sempre à mão, mesmo sem internet.</span>
+  </div>
+  <button class="install-banner__btn" id="installBtn">Instalar</button>
+  <button class="install-banner__close" id="installClose" aria-label="Fechar">×</button>
+</div>
+
+<!-- ════════ APP HEADER ════════ -->
+<header class="app-header">
+  <div class="cross-wrap">
+    <div class="cross">
+      <div class="cross-v"></div>
+      <div class="cross-h"></div>
+    </div>
+    <h1 class="title">O que <span>Jesus</span> Faria?</h1>
+    <p class="subtitle">Sabedoria · Salmos · Devocional</p>
+  </div>
+  <button class="header-action" id="openSettings" aria-label="Configurações de áudio">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="3"/>
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+    </svg>
+  </button>
+</header>
+
+<div class="divider" aria-hidden="true"></div>
+
+<!-- ════════ TABS ════════ -->
+<nav class="tabs-header" role="tablist">
+  <button class="tab-btn active" role="tab" data-tab="wisdom" aria-selected="true">
+    <span class="tab-icon" aria-hidden="true">✦</span>
+    <span class="tab-label">Sabedoria</span>
+  </button>
+  <button class="tab-btn" role="tab" data-tab="psalms" aria-selected="false">
+    <span class="tab-icon" aria-hidden="true">☩</span>
+    <span class="tab-label">Salmos</span>
+  </button>
+  <button class="tab-btn" role="tab" data-tab="devotion" aria-selected="false">
+    <span class="tab-icon" aria-hidden="true">☼</span>
+    <span class="tab-label">Devocional</span>
+  </button>
+</nav>
+
+<main class="app">
+
+  <!-- ════════ TAB 1: WISDOM ════════ -->
+  <section id="tab-wisdom" class="tab-content active" role="tabpanel">
+    <div class="card">
+      <label class="label" for="situation">Conte sua situação ou dúvida</label>
+      <div class="textarea-wrap">
+        <textarea id="situation" placeholder="Escreva aqui o que está passando no seu coração…"></textarea>
+        <button class="mic-btn" id="micBtn" type="button" aria-label="Falar em vez de digitar" title="Ditar por voz">
+          <svg class="mic-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+            <line x1="12" y1="19" x2="12" y2="23"/>
+            <line x1="8" y1="23" x2="16" y2="23"/>
+          </svg>
+          <span class="mic-pulse" aria-hidden="true"></span>
+        </button>
+      </div>
+      <div class="mic-hint" id="micHint" hidden></div>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="askBtn">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          Buscar Sabedoria
+        </button>
+        <button class="btn btn-clear" id="clearBtn" title="Limpar" aria-label="Limpar">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="loading" id="loading" hidden>
+      <div class="loading-dots">
+        <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+      </div>
+      <p class="loading-text">Meditando nos ensinamentos de Cristo…</p>
+    </div>
+
+    <div class="error-msg" id="errorMsg" hidden></div>
+
+    <div id="responseArea" hidden>
+      <div class="response-card">
+        <div class="response-header">
+          <div class="response-mark">☩</div>
+          <span class="response-title">Jesus diria a você</span>
+        </div>
+        <p class="counsel-text" id="counselText"></p>
+        <div class="verse-block">
+          <div class="verse-label">Palavra de Deus</div>
+          <p class="verse-text" id="verseText"></p>
+          <p class="verse-ref" id="verseRef"></p>
+        </div>
+        <button class="speak-btn" id="speakBtn">
+          <span class="speak-icon" aria-hidden="true">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+          </span>
+          <span class="speak-label">Ouvir em voz alta</span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════ TAB 2: PSALMS ════════ -->
+  <section id="tab-psalms" class="tab-content" role="tabpanel" hidden>
+    <div class="card">
+      <label class="label" for="psalmSelect">Escolha um Salmo para Meditar</label>
+      <select id="psalmSelect">
+        <option value="">— Selecione um Salmo —</option>
+        <option value="23">Salmo 23 — O Bom Pastor (Conforto)</option>
+        <option value="27">Salmo 27 — Luz e Salvação (Coragem)</option>
+        <option value="42">Salmo 42 — Sede de Deus (Saudade)</option>
+        <option value="51">Salmo 51 — Arrependimento (Perdão)</option>
+        <option value="63">Salmo 63 — Fome de Deus (Desejo)</option>
+        <option value="91">Salmo 91 — Proteção (Segurança)</option>
+        <option value="100">Salmo 100 — Gratidão (Louvor)</option>
+        <option value="139">Salmo 139 — Conhecido por Deus (Intimidade)</option>
+      </select>
+
+      <div id="psalmContent" hidden>
+        <div class="psalm-intro">
+          <span id="psalmIntro"></span>
+        </div>
+
+        <label class="label" style="margin-top:18px;">Leia o Salmo</label>
+        <div class="psalm-text" id="psalmText"></div>
+
+        <button class="speak-btn" id="psalmSpeakBtn">
+          <span class="speak-icon" aria-hidden="true">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+          </span>
+          <span class="speak-label">Ouvir o Salmo</span>
+        </button>
+
+        <label class="label" style="margin-top:22px;">Método Ler · Pensar · Orar · Viver</label>
+
+        <div class="meditation-step">
+          <div class="step-row">
+            <div class="step-numeral">I</div>
+            <div>
+              <div class="step-title">Ler</div>
+              <div class="step-text">Leia devagar, saboreando cada palavra. Releia as partes que mais tocaram você.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="meditation-step">
+          <div class="step-row">
+            <div class="step-numeral">II</div>
+            <div>
+              <div class="step-title">Pensar</div>
+              <div class="step-text">O que revela sobre Deus? E sobre mim? Qual versículo tocou meu coração?</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="meditation-step">
+          <div class="step-row">
+            <div class="step-numeral">III</div>
+            <div>
+              <div class="step-title">Orar</div>
+              <div class="step-text">Use o Salmo para falar com Deus. Confesse, agradeça, peça ajuda — seja honesto.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="meditation-step">
+          <div class="step-row">
+            <div class="step-numeral">IV</div>
+            <div>
+              <div class="step-title">Viver</div>
+              <div class="step-text">Como viver essa verdade hoje? Qual passo concreto você pode dar?</div>
+            </div>
+          </div>
+        </div>
+
+        <label class="label" for="reflection" style="margin-top:22px;">Sua Reflexão Pessoal</label>
+        <textarea class="reflection-textarea" id="reflection" placeholder="Escreva seus pensamentos, sentimentos e descobertas. Como este Salmo tocou você?"></textarea>
+        <button class="btn btn-primary" style="width:100%; margin-top:12px;" id="saveReflectionBtn">
+          Guardar Reflexão
+        </button>
+        <div class="save-confirm" id="saveConfirm" hidden>✦ Reflexão guardada</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════ TAB 3: DAILY DEVOTION ════════ -->
+  <section id="tab-devotion" class="tab-content" role="tabpanel" hidden>
+    <div class="card devotion-card">
+      <div class="devotion-date" id="devotionDate"></div>
+      <div class="devotion-eyebrow">Versículo do Dia</div>
+      <blockquote class="devotion-verse" id="devotionVerse"></blockquote>
+      <div class="devotion-ref" id="devotionRef"></div>
+
+      <div class="divider-soft" aria-hidden="true"></div>
+
+      <div class="devotion-eyebrow">Reflexão</div>
+      <p class="devotion-reflection" id="devotionReflection"></p>
+
+      <button class="speak-btn" id="devotionSpeakBtn">
+        <span class="speak-icon" aria-hidden="true">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+        </span>
+        <span class="speak-label">Ouvir devocional</span>
+      </button>
+    </div>
+
+    <div class="card journal-card">
+      <div class="journal-header">
+        <div>
+          <div class="devotion-eyebrow">Diário de Oração</div>
+          <p class="journal-sub">Anote suas orações e veja-as respondidas.</p>
+        </div>
+        <button class="btn-ghost" id="newPrayerBtn" aria-label="Nova oração">＋</button>
+      </div>
+
+      <form class="prayer-form" id="prayerForm" hidden>
+        <textarea id="prayerInput" placeholder="Pelo que você quer orar hoje?"></textarea>
+        <div class="prayer-form__actions">
+          <button type="button" class="btn-text" id="cancelPrayer">Cancelar</button>
+          <button type="submit" class="btn btn-primary btn-sm">Adicionar</button>
+        </div>
+      </form>
+
+      <ul class="prayer-list" id="prayerList"></ul>
+      <div class="empty-state" id="prayerEmpty" hidden>
+        <div class="empty-mark">☩</div>
+        <p>Suas orações aparecerão aqui.<br><small>Toque <strong>＋</strong> para começar.</small></p>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="footer">
+  <div class="footer-mark">✦</div>
+  <p>Com fé, toda resposta vem do alto · WWJD</p>
+</footer>
+
+<!-- ════════ SETTINGS MODAL (ElevenLabs) ════════ -->
+<div class="modal" id="settingsModal" hidden>
+  <div class="modal__backdrop" data-close></div>
+  <div class="modal__panel" role="dialog" aria-labelledby="settingsTitle" aria-modal="true">
+    <header class="modal__header">
+      <div>
+        <div class="modal__eyebrow">Configurações</div>
+        <h2 class="modal__title" id="settingsTitle">Voz Divina</h2>
+      </div>
+      <button class="modal__close" data-close aria-label="Fechar">×</button>
+    </header>
+
+    <div class="modal__body">
+      <p class="modal__intro">Voz divina ativada. Escolha quem narrará as Escrituras para você.</p>
+
+      <div class="field">
+        <label class="field__label">Escolha a Voz</label>
+        <div class="voice-grid" id="voiceGrid">
+          <!-- populated by JS -->
+        </div>
+      </div>
+
+      <div class="modal__actions">
+        <button class="btn btn-clear" id="testVoiceBtn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+          Testar voz
+        </button>
+        <button class="btn btn-primary" id="saveSettingsBtn">Salvar</button>
+      </div>
+
+      <div class="status-pill" id="apiStatus" hidden></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ TOAST ════════ -->
+<div class="toast" id="toast" hidden></div>
+
+<script src="app.js"></script>
+<script>
+  // PWA: register service worker
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js').catch(()=>{});
+    });
+  }
+</script>
+</body>
+</html>

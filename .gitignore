@@ -1,0 +1,18 @@
+# Dependencies
+node_modules/
+
+# Local env files
+.env*.local
+
+# Editor directories and files
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Project specific
+uploads/
+.DS_Store
