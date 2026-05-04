@@ -276,6 +276,10 @@
     loadingEl.hidden = !show;
     if (show) {
       const textEl = loadingEl.querySelector('.loading-text');
+      askBtn.disabled = true;
+      askBtn.style.opacity = '0.6';
+      const btnLabel = askBtn.querySelector('span:last-child');
+      if (btnLabel) btnLabel.textContent = 'Buscando…';
       let i = 0;
       loadingTimer = setInterval(() => {
         i = (i + 1) % loadingMsgs.length;
@@ -283,6 +287,10 @@
       }, 2200);
     } else {
       clearInterval(loadingTimer);
+      askBtn.disabled = false;
+      askBtn.style.opacity = '1';
+      const btnLabel = askBtn.querySelector('span:last-child');
+      if (btnLabel) btnLabel.textContent = 'Buscar Sabedoria';
     }
   }
 
@@ -293,6 +301,10 @@
     fullResponseText = '';
     stopAll();
     situationEl.focus();
+    // Reset step indicator
+    const steps = document.querySelectorAll('#wisdomSteps .step');
+    steps[0].classList.add('active');
+    steps[1].classList.remove('active');
   }
   clearBtn.addEventListener('click', clearWisdom);
 
@@ -322,6 +334,11 @@
       verseTextEl.textContent = `"${parsed.versiculo || ''}"`;
       verseRefEl.textContent = parsed.referencia ? `— ${parsed.referencia}` : '';
       responseArea.hidden = false;
+
+      // Update step indicator to step 2
+      const steps = document.querySelectorAll('#wisdomSteps .step');
+      steps[0].classList.remove('active');
+      steps[1].classList.add('active');
 
       fullResponseText = `${parsed.conselho} ... Palavra de Deus: ${parsed.versiculo} ${parsed.referencia || ''}`;
     } catch (err) {
@@ -624,9 +641,11 @@ Porque maravilhosamente fui feito; maravilhosas são as tuas obras, e a minha al
         if (p.answered) toast('✦ Glória a Deus pela resposta!');
       });
       li.querySelector('.delete-btn').addEventListener('click', () => {
+        if (!confirm('Tem certeza que quer remover esta oração?')) return;
         prayers = prayers.filter(x => x !== p);
         savePrayers(prayers);
         renderPrayers();
+        toast('✦ Oração removida');
       });
       prayerListEl.appendChild(li);
     });
