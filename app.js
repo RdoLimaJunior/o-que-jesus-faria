@@ -50,10 +50,10 @@
 
   // ════════ ELEVENLABS / AUDIO ════════
   const VOICES = [
-    { id: 'pqHfZKP75CvOlQylNhV4', name: 'Bill',     desc: 'Grave e profundo (Morgan Freeman)' },
-    { id: 'nPczCjzI2devNBz1zQrb', name: 'Brian',    desc: 'Sábio e caloroso (Cid Moreira)' },
-    { id: 'XrExE9yKIg1WjnnlVkGX', name: 'Matilda',  desc: 'Suave e maternal' },
-    { id: 'EXAVITQu4vr4xnSDxMaL', name: 'Sarah',    desc: 'Serena e contemplativa' },
+    { id: 'pqHfZKP75CvOlQylNhV4', name: 'Moisés',    desc: 'Grave e profundo, autoridade divina' },
+    { id: 'nPczCjzI2devNBz1zQrb', name: 'João',     desc: 'Sábio e caloroso, o discípulo amado' },
+    { id: 'XrExE9yKIg1WjnnlVkGX', name: 'Madalena', desc: 'Suave e maternal, compaixão transformada' },
+    { id: 'EXAVITQu4vr4xnSDxMaL', name: 'Débora',   desc: 'Serena e contemplativa, profetisa e juíza' },
   ];
 
   const elevenLabsApiKey = localStorage.getItem('elevenLabsKey'); // Opção de override local
@@ -445,7 +445,46 @@
   }
 
   // ════════ PSALMS ════════
-  const psalmsDb = {
+  let psalmsData = [];
+  let psalmsDb = {};
+
+  // Load all 150 psalms from JSON
+  async function loadPsalms() {
+    try {
+      const res = await fetch('/salmos.json');
+      if (!res.ok) throw new Error('Failed to load salmos.json');
+      const { salmos } = await res.json();
+      psalmsData = salmos;
+
+      // Build psalmsDb from JSON
+      salmos.forEach(s => {
+        psalmsDb[s.numero] = {
+          titulo: s.titulo,
+          tipo: s.tipo,
+          autor: s.autor,
+          intro: `${s.titulo}\n\nAutor: ${s.autor}\nTipo: ${s.tipo}\n\nEste Salmo oferece consolo, força e esperança através da Palavra de Deus.`,
+          text: s.texto || `[Texto do Salmo ${s.numero} disponível para meditação e louvor.]`
+        };
+      });
+
+      // Populate select with all 150 psalms
+      const select = document.getElementById('psalmSelect');
+      select.innerHTML = '<option value="">— Escolha um Salmo para Meditar —</option>';
+      salmos.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s.numero;
+        opt.textContent = `Salmo ${s.numero} — ${s.titulo}`;
+        select.appendChild(opt);
+      });
+    } catch (err) {
+      console.error('Error loading psalms:', err);
+      alert('Erro ao carregar os Salmos. Verifique sua conexão.');
+    }
+  }
+
+  loadPsalms();
+
+  const psalmsDbOld = {
     23: {
       intro: 'Escrito por Davi. O clássico Salmo de conforto e proteção. Quando você se sente frágil, perdido ou precisa de segurança, este Salmo o abraça com a verdade de que Deus é seu Pastor fiel.',
       text: `O Senhor é o meu pastor, nada me faltará.
