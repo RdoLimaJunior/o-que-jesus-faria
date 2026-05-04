@@ -88,6 +88,6 @@ Responda APENAS em JSON válido (sem markdown, sem comentários):
 
   } catch (error) {
     console.error('Server Error:', error);
-    res.status(500).json({ error: 'Erro interno no servidor: ' + error.message });
+    return res.status(500).json({ error: 'Erro interno no servidor: ' + error.message });
   }
 };
