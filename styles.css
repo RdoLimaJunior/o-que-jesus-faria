@@ -607,7 +607,7 @@ textarea::placeholder, input::placeholder { color: #b0965a; font-style: italic; 
 .verse-ref {
   font-family: 'Cinzel', serif;
   font-size: .78rem;
-  color: var(--gold-deep);
+  color: #6b5d42;
   margin-top: 8px;
   letter-spacing: .04em;
 }

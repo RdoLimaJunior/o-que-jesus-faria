@@ -364,7 +364,22 @@
 
       counselTextEl.textContent = parsed.conselho || '';
       verseTextEl.textContent = `"${parsed.versiculo || ''}"`;
-      verseRefEl.textContent = parsed.referencia ? `— ${parsed.referencia}` : '';
+
+      if (parsed.referencia) {
+        verseRefEl.textContent = `— ${parsed.referencia}`;
+        // Acessibilidade: converter "Livro Cap:Ver" para leitura correta
+        // Ex: "Romanos 12:10" → "Romanos, capítulo 12, versículo 10"
+        const refMatch = parsed.referencia.match(/(.+?)\s+(\d+):(\d+)/);
+        if (refMatch) {
+          const [, livro, cap, ver] = refMatch;
+          const ariaLabel = `${livro}, capítulo ${cap}, versículo ${ver}`;
+          verseRefEl.setAttribute('aria-label', ariaLabel);
+        }
+      } else {
+        verseRefEl.textContent = '';
+        verseRefEl.removeAttribute('aria-label');
+      }
+
       responseArea.hidden = false;
 
       // Update step indicator to step 2
