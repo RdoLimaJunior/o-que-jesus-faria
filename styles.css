@@ -921,24 +921,6 @@ textarea::placeholder, input::placeholder { color: #b0965a; font-style: italic; 
   background: rgba(255,255,255,0.08);
 }
 
-.speed-control {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  margin-top: 10px;
-}
-
-.speed-control input[type="range"] {
-  flex: 1;
-  accent-color: var(--primary);
-}
-
-#speedValue {
-  font-family: 'Cinzel', serif;
-  color: var(--primary);
-  min-width: 45px;
-}
-
 .field__hint {
   font-size: 0.8rem;
   color: rgba(255,255,255,0.5);
