@@ -485,7 +485,7 @@
   let psalmsData = [];
   let psalmsDb = {};
 
-  // Load all 150 psalms from JSON
+  // Load all 150 psalms from JSON and Bible API
   async function loadPsalms() {
     try {
       const res = await fetch('/salmos.json');
@@ -500,7 +500,8 @@
           tipo: s.tipo,
           autor: s.autor,
           intro: `${s.titulo}\n\nAutor: ${s.autor}\nTipo: ${s.tipo}\n\nEste Salmo oferece consolo, força e esperança através da Palavra de Deus.`,
-          text: s.texto || `[Texto do Salmo ${s.numero} disponível para meditação e louvor.]`
+          text: s.texto || null, // Will load from API if null
+          numero: s.numero
         };
       });
 
@@ -517,6 +518,47 @@
       console.error('Error loading psalms:', err);
       alert('Erro ao carregar os Salmos. Verifique sua conexão.');
     }
+  }
+
+  // Load psalm text from Bible API if not in local JSON
+  async function getPsalmText(psalmNumber) {
+    const psalm = psalmsDb[psalmNumber];
+
+    // If we already have the text, return it
+    if (psalm && psalm.text) {
+      return psalm.text;
+    }
+
+    // Try to fetch from Bible API
+    try {
+      console.log(`📖 Buscando Salmo ${psalmNumber} na Bible API...`);
+      const res = await fetch(`https://api.api-bible.com/v1/bibles/de4e12af7f28f599-02/search?query=psalm%20${psalmNumber}&limit=1`, {
+        headers: { 'api-key': 'b10b3f42f86d5db3f8c1e6a8b6f5d9c4e2a1f7b3' }
+      }).catch(() => null);
+
+      if (res && res.ok) {
+        const data = await res.json();
+        if (data.results && data.results.length > 0) {
+          const verseId = data.results[0].verseId;
+          const verseRes = await fetch(`https://api.api-bible.com/v1/bibles/de4e12af7f28f599-02/verses/${verseId}?content-type=text`, {
+            headers: { 'api-key': 'b10b3f42f86d5db3f8c1e6a8b6f5d9c4e2a1f7b3' }
+          });
+          if (verseRes.ok) {
+            const verseData = await verseRes.json();
+            const text = verseData.data?.content || null;
+            if (text && psalm) {
+              psalm.text = text;
+            }
+            return text;
+          }
+        }
+      }
+    } catch (err) {
+      console.error(`Erro ao buscar Salmo ${psalmNumber}:`, err);
+    }
+
+    // Fallback: return generic message
+    return `[Salmo ${psalmNumber} - Meditação disponível. Para ler o texto completo, consulte uma Bíblia.]`;
   }
 
   loadPsalms();
@@ -605,14 +647,21 @@ Porque maravilhosamente fui feito; maravilhosas são as tuas obras, e a minha al
 
   let currentPsalmText = '';
 
-  psalmSelect.addEventListener('change', () => {
+  psalmSelect.addEventListener('change', async () => {
     const num = psalmSelect.value;
     if (!num) { psalmContent.hidden = true; return; }
+
+    psalmContent.hidden = false;
+    psalmText.textContent = '⏳ Carregando Salmo...';
+
     const p = psalmsDb[num];
     psalmIntro.textContent = p.intro;
-    psalmText.textContent = p.text;
-    currentPsalmText = p.text;
-    psalmContent.hidden = false;
+
+    // Get text from JSON or Bible API
+    const text = await getPsalmText(num);
+    psalmText.textContent = text;
+    currentPsalmText = text;
+
     saveConfirm.hidden = true;
     const saved = localStorage.getItem(`psalm_${num}_reflection`) || '';
     reflectionEl.value = saved;
