@@ -305,30 +305,18 @@
     showLoading(true);
     askBtn.disabled = true;
 
-    const systemPrompt = `Você é uma voz amorosa e sábia que reflete os ensinamentos de Jesus Cristo no Evangelho.
-
-REGRAS:
-- Tom caloroso, simples, como um amigo sábio.
-- Frases curtas, palavras simples, sem jargões teológicos.
-- Em PORTUGUÊS DO BRASIL.
-
-Para qualquer situação:
-1. Conselho de como Cristo aconselharia (3 a 4 frases simples).
-2. UM versículo bíblico curto dos Evangelhos ou Epístolas.
-
-Responda APENAS em JSON válido (sem markdown, sem comentários):
-{"conselho": "...", "versiculo": "...", "referencia": "Livro Cap:Ver"}`;
-
     try {
-      const raw = await window.claude.complete({
-        system: systemPrompt,
-        messages: [{ role: 'user', content: situation }]
+      const res = await fetch('/api/wisdom', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ situation })
       });
-      const clean = String(raw).replace(/```json|```/g, '').trim();
-      const start = clean.indexOf('{');
-      const end = clean.lastIndexOf('}');
-      const jsonStr = (start >= 0 && end > start) ? clean.slice(start, end + 1) : clean;
-      const parsed = JSON.parse(jsonStr);
+
+      if (!res.ok) {
+        throw new Error(`Status ${res.status}`);
+      }
+
+      const parsed = await res.json();
 
       counselTextEl.textContent = parsed.conselho || '';
       verseTextEl.textContent = `"${parsed.versiculo || ''}"`;
@@ -336,7 +324,6 @@ Responda APENAS em JSON válido (sem markdown, sem comentários):
       responseArea.hidden = false;
 
       fullResponseText = `${parsed.conselho} ... Palavra de Deus: ${parsed.versiculo} ${parsed.referencia || ''}`;
-      responseArea.scrollIntoView ? null : null; // (avoid scrollIntoView per guidelines)
     } catch (err) {
       console.error(err);
       errorMsgEl.textContent = '✦ Não foi possível buscar agora. Verifique sua conexão e tente novamente.';
