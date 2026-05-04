@@ -56,9 +56,7 @@
     { id: 'EXAVITQu4vr4xnSDxMaL', name: 'Débora',   desc: 'Serena e contemplativa, profetisa e juíza' },
   ];
 
-  const elevenLabsApiKey = localStorage.getItem('elevenLabsKey'); // Opção de override local
   let elevenLabsVoiceId = localStorage.getItem('elevenLabsVoiceId') || VOICES[0].id;
-  const useElevenLabs = () => true; // Agora tentamos sempre via nossa API na Vercel
 
   // populate voice grid
   const voiceGrid = document.getElementById('voiceGrid');
@@ -156,71 +154,55 @@
     }
   }
 
-  /**
-   * speakText(text, btn, apiKeyOverride?, voiceIdOverride?)
-   */
   async function speakText(text, btn, apiKeyOverride, voiceIdOverride) {
     if (!text) return;
 
-    // toggle stop if pressing same button
     if (btn && currentBtn === btn) {
       stopAll();
       return;
     }
     stopAll();
 
-    const key   = apiKeyOverride !== undefined ? apiKeyOverride : elevenLabsApiKey;
     const voice = voiceIdOverride || elevenLabsVoiceId;
     const origLabel = btn ? (btn.querySelector('.speak-label')?.textContent || 'Ouvir em voz alta') : '';
     if (btn) btn.dataset.label = origLabel;
 
-    if (key) {
-      // ElevenLabs
-      try {
-        if (btn) {
-          const labelEl = btn.querySelector('.speak-label');
-          if (labelEl) labelEl.textContent = 'Carregando…';
-          btn.classList.add('playing');
-          currentBtn = btn;
-        }
-        const res = await fetch('/api/speak', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            text,
-            voice_id: voice
-          })
-        });
-        if (!res.ok) {
-          throw new Error('api proxy status ' + res.status);
-        }
-        const buf = await res.arrayBuffer();
-        const ctx = new (window.AudioContext || window.webkitAudioContext)();
-        currentAudioCtx = ctx;
-        const audioBuf = await ctx.decodeAudioData(buf);
-        const src = ctx.createBufferSource();
-        src.buffer = audioBuf;
-        src.connect(ctx.destination);
-        currentSource = src;
-        if (btn) setBtnPlaying(btn, true, 'Parar');
-        src.onended = () => {
-          if (currentSource === src) currentSource = null;
-          if (currentBtn === btn) {
-            setBtnPlaying(btn, false, origLabel);
-            currentBtn = null;
-          }
-        };
-        src.start(0);
-      } catch (err) {
-        console.error('❌ Erro ao gerar áudio ElevenLabs:', err);
-        console.error('Detalhes:', { message: err.message, url: '/api/speak' });
-        toast('⚠️ Áudio via ElevenLabs falhou. Usando navegador...');
-        if (btn) setBtnPlaying(btn, false, origLabel);
-        currentBtn = null;
-        // fall back to browser TTS
-        browserSpeak(text, btn, origLabel);
+    try {
+      if (btn) {
+        const labelEl = btn.querySelector('.speak-label');
+        if (labelEl) labelEl.textContent = 'Carregando…';
+        btn.classList.add('playing');
+        currentBtn = btn;
       }
-    } else {
+      const res = await fetch('/api/speak', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, voice_id: voice })
+      });
+      if (!res.ok) {
+        throw new Error('api proxy status ' + res.status);
+      }
+      const buf = await res.arrayBuffer();
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      currentAudioCtx = ctx;
+      const audioBuf = await ctx.decodeAudioData(buf);
+      const src = ctx.createBufferSource();
+      src.buffer = audioBuf;
+      src.connect(ctx.destination);
+      currentSource = src;
+      if (btn) setBtnPlaying(btn, true, 'Parar');
+      src.onended = () => {
+        if (currentSource === src) currentSource = null;
+        if (currentBtn === btn) {
+          setBtnPlaying(btn, false, origLabel);
+          currentBtn = null;
+        }
+      };
+      src.start(0);
+    } catch (err) {
+      toast('⚠️ Áudio via ElevenLabs falhou. Usando navegador...');
+      if (btn) setBtnPlaying(btn, false, origLabel);
+      currentBtn = null;
       browserSpeak(text, btn, origLabel);
     }
   }
@@ -311,16 +293,9 @@
   clearBtn.addEventListener('click', clearWisdom);
 
   async function askJesus() {
-    console.log('🔍 askJesus chamado');
-    console.log('situationEl:', situationEl);
-    console.log('situationEl.value:', situationEl.value);
-
     const situation = situationEl.value.trim();
-    console.log('📝 Situação digitada (depois trim):', situation);
-    console.log('Comprimento:', situation.length);
 
     if (!situation) {
-      console.warn('⚠️ Campo vazio! Foco devolvido ao textarea.');
       situationEl.focus();
       return;
     }
@@ -331,25 +306,16 @@
     askBtn.disabled = true;
 
     try {
-      const payload = { situation };
-      const bodyText = JSON.stringify(payload);
-      console.log('📤 Payload:', payload);
-      console.log('📤 Body JSON:', bodyText);
-
       const res = await fetch('/api/wisdom', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: bodyText
+        body: JSON.stringify({ situation })
       });
-
-      console.log('📥 Resposta do servidor: Status', res.status);
 
       if (!res.ok) {
         const errorData = await res.text();
-        console.error('❌ Erro do servidor (Status ' + res.status + '):', errorData);
         try {
           const errorJson = JSON.parse(errorData);
-          console.error('Mensagem de erro:', errorJson.error);
           throw new Error(`Status ${res.status}: ${errorJson.error}`);
         } catch (e) {
           throw new Error(`Status ${res.status}: ${errorData || 'Resposta vazia'}`);
@@ -359,7 +325,7 @@
       const parsed = await res.json();
 
       if (!parsed.conselho) {
-        throw new Error('Resposta inválida do servidor: ' + JSON.stringify(parsed));
+        throw new Error('Resposta inválida do servidor');
       }
 
       counselTextEl.textContent = parsed.conselho || '';
@@ -367,8 +333,6 @@
 
       if (parsed.referencia) {
         verseRefEl.textContent = `— ${parsed.referencia}`;
-        // Acessibilidade: converter "Livro Cap:Ver" para leitura correta
-        // Ex: "Romanos 12:10" → "Romanos, capítulo 12, versículo 10"
         const refMatch = parsed.referencia.match(/(.+?)\s+(\d+):(\d+)/);
         if (refMatch) {
           const [, livro, cap, ver] = refMatch;
@@ -382,19 +346,12 @@
 
       responseArea.hidden = false;
 
-      // Update step indicator to step 2
       const steps = document.querySelectorAll('#wisdomSteps .step');
       steps[0].classList.remove('active');
       steps[1].classList.add('active');
 
       fullResponseText = `${parsed.conselho} ... Palavra de Deus: ${parsed.versiculo} ${parsed.referencia || ''}`;
     } catch (err) {
-      console.error('❌ Erro ao buscar sabedoria:', err);
-      console.error('Detalhes:', {
-        message: err.message,
-        status: err.status,
-        url: '/api/wisdom'
-      });
       errorMsgEl.textContent = '✦ Erro: ' + (err.message || 'Não foi possível conectar ao servidor. Verifique sua conexão.');
       errorMsgEl.hidden = false;
     } finally {
@@ -497,7 +454,6 @@
   }
 
   // ════════ PSALMS ════════
-  let psalmsData = [];
   let psalmsDb = {};
 
   // IndexedDB para guardar todos os 150 salmos
@@ -528,7 +484,7 @@
         tx.onerror = () => reject(tx.error);
       });
     } catch (err) {
-      console.error('Erro ao salvar Salmo:', err);
+      return;
     }
   }
 
@@ -541,70 +497,15 @@
         req.onsuccess = () => resolve(req.result);
       });
     } catch (err) {
-      console.error('Erro ao buscar Salmo do DB:', err);
       return null;
     }
   }
 
-  // Load all 150 psalms from JSON and Bible API, save to IndexedDB
-  async function loadPsalms() {
-    try {
-      const res = await fetch('/salmos.json');
-      if (!res.ok) throw new Error('Failed to load salmos.json');
-      const { salmos } = await res.json();
-      psalmsData = salmos;
-
-      // Build psalmsDb from JSON
-      salmos.forEach(s => {
-        psalmsDb[s.numero] = {
-          titulo: s.titulo,
-          tipo: s.tipo,
-          autor: s.autor,
-          intro: `${s.titulo}\n\nAutor: ${s.autor}\nTipo: ${s.tipo}\n\nEste Salmo oferece consolo, força e esperança através da Palavra de Deus.`,
-          text: s.texto || null,
-          numero: s.numero
-        };
-      });
-
-      // Populate select with all 150 psalms
-      const select = document.getElementById('psalmSelect');
-      select.innerHTML = '<option value="">— Escolha um Salmo para Meditar —</option>';
-      salmos.forEach(s => {
-        const opt = document.createElement('option');
-        opt.value = s.numero;
-        opt.textContent = `Salmo ${s.numero} — ${s.titulo}`;
-        select.appendChild(opt);
-      });
-
-      // Carrega textos de todos os 150 salmos em background
-      console.log('📖 Carregando todos os 150 Salmos...');
-      for (const s of salmos) {
-        const cached = await getPsalmFromDB(s.numero);
-        if (!cached || !cached.text) {
-          const text = await getPsalmText(s.numero);
-          if (text) {
-            await savePsalmToDB({
-              numero: s.numero,
-              titulo: s.titulo,
-              texto: text,
-              tipo: s.tipo,
-              autor: s.autor
-            });
-          }
-        }
-      }
-      console.log('✅ Todos os Salmos carregados e guardados!');
-    } catch (err) {
-      console.error('Error loading psalms:', err);
-    }
-  }
 
   // Load psalm text from serverless API (protegido)
   async function getPsalmText(psalmNumber) {
-    // Try IndexedDB first
     const cached = await getPsalmFromDB(psalmNumber);
     if (cached && cached.texto) {
-      console.log(`✅ Salmo ${psalmNumber} carregado do cache`);
       return cached.texto;
     }
 
@@ -613,9 +514,7 @@
       return psalm.text;
     }
 
-    // Fetch from our serverless API
     try {
-      console.log(`📖 Carregando Salmo ${psalmNumber}...`);
       const res = await fetch('/api/psalms', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -623,14 +522,11 @@
       });
 
       if (!res.ok) {
-        const error = await res.json();
-        console.error(`Erro ao buscar Salmo ${psalmNumber}:`, error);
         return `[Salmo ${psalmNumber} - Texto não disponível.]`;
       }
 
       const { texto } = await res.json();
       if (texto) {
-        // Salvar no DB para próximas vezes
         await savePsalmToDB({
           numero: psalmNumber,
           titulo: psalm?.titulo || `Salmo ${psalmNumber}`,
@@ -641,19 +537,18 @@
         return texto;
       }
     } catch (err) {
-      console.error(`Erro ao buscar Salmo ${psalmNumber}:`, err);
+      // silently fail and return fallback
     }
 
     return `[Salmo ${psalmNumber} - Meditação disponível.]`;
   }
 
-  // Carregar apenas metadata (sem textos)
+  // Load psalms metadata (titles, authors, types only)
   async function loadPsalmsMetadata() {
     try {
       const res = await fetch('/salmos.json');
       if (!res.ok) throw new Error('Failed to load salmos.json');
       const { salmos } = await res.json();
-      psalmsData = salmos;
 
       salmos.forEach(s => {
         psalmsDb[s.numero] = {
@@ -666,7 +561,6 @@
         };
       });
 
-      // Populate select
       const select = document.getElementById('psalmSelect');
       select.innerHTML = '<option value="">— Escolha um Salmo para Meditar —</option>';
       salmos.forEach(s => {
@@ -675,87 +569,12 @@
         opt.textContent = `Salmo ${s.numero} — ${s.titulo}`;
         select.appendChild(opt);
       });
-
-      console.log('✅ Metadata dos 150 Salmos carregada');
     } catch (err) {
-      console.error('Error loading psalms metadata:', err);
+      // silently fail if metadata cannot load
     }
   }
 
   loadPsalmsMetadata();
-
-  const psalmsDbOld = {
-    23: {
-      intro: 'Escrito por Davi. O clássico Salmo de conforto e proteção. Quando você se sente frágil, perdido ou precisa de segurança, este Salmo o abraça com a verdade de que Deus é seu Pastor fiel.',
-      text: `O Senhor é o meu pastor, nada me faltará.
-Deitar-me faz em verdes pastos; guia-me mansamente a águas tranquilas.
-Refrigera a minha alma; guia-me pelas veredas da justiça, por amor do seu nome.
-Ainda que eu ande pelo vale da sombra da morte, não temerei mal algum, porque tu estás comigo; a tua vara e o teu cajado me confortam.
-Preparas uma mesa diante de mim na presença dos meus inimigos, unges a minha cabeça com óleo; o meu cálice transborda.
-Certamente que a bondade e a misericórdia me seguirão todos os dias da minha vida; e habitarei na casa do Senhor por longos dias.`
-    },
-    27: {
-      intro: 'Salmo de Davi — Coragem e confiança em Deus. Quando o medo bate à porta, este Salmo é um grito de esperança: "O Senhor é a minha luz e a minha salvação."',
-      text: `O Senhor é a minha luz e a minha salvação; de quem terei medo? O Senhor é a fortaleza da minha vida; de quem me recearei?
-Quando os malfeitores se aproximam de mim para me devorarem, são eles, meus inimigos e meus adversários, que tropeçam e caem.
-Ainda que um exército se acampasse contra mim, não temeria; ainda que se levantasse contra mim a guerra, mesmo assim eu estaria confiante.
-Uma coisa pedi ao Senhor, e a buscarei: que eu habite na casa do Senhor todos os dias da minha vida, para ver a formosura do Senhor.
-Porque no dia da angústia ele me esconderá na sua tenda; no oculto do seu tabernáculo me ocultará; levantar-me-á sobre uma rocha.`
-    },
-    42: {
-      intro: 'Salmo de anseio e saudade. Quando você sente uma fome espiritual, quando o coração clama por Deus. "Como o corço brama pelas correntes das águas, assim clama a minha alma por ti, ó Deus."',
-      text: `Como o corço brama pelas correntes das águas, assim suspira a minha alma por ti, ó Deus.
-A minha alma tem sede de Deus, do Deus vivo; quando entrarei e verei a face de Deus?
-As minhas lágrimas têm sido o meu alimento dia e noite, enquanto me dizem todos os dias: Onde está o teu Deus?
-Quando me lembro destas coisas, derramei a minha alma dentro de mim, porque eu passei com a multidão, e a conduzia à casa de Deus com voz de alegria.
-Por que te abates, ó minha alma? Por que te perturbas dentro de mim? Espera em Deus, pois ainda hei de louvar-lhe pela salvação da sua presença.`
-    },
-    51: {
-      intro: 'Salmo de arrependimento profundo de Davi após seu grave pecado. Se você carrega culpa, remorso ou necessidade de perdão, este Salmo é um caminho de volta. "Cria em mim, ó Deus, um coração puro."',
-      text: `Tem piedade de mim, ó Deus, segundo a tua benignidade; apaga as minhas transgressões, segundo a tua muita misericórdia.
-Lava-me completamente da minha iniquidade, e purifica-me do meu pecado.
-Porque eu conheço as minhas transgressões, e o meu pecado está sempre diante de mim.
-Contra ti, contra ti somente pequei, e fiz o que era mau diante dos teus olhos.
-Cria em mim, ó Deus, um coração puro, e renova em mim um espírito reto.
-Não me lances fora da tua presença, e não tires de mim o teu Espírito Santo.`
-    },
-    63: {
-      intro: 'Salmo de ardente desejo por Deus. Quando você ama profundamente a Deus e quer estar perto dele. Uma oração de intimidade e desejo espiritual intenso.',
-      text: `Ó Deus, tu és o meu Deus; de madrugada te busco; a minha alma tem sede de ti, a minha carne te deseja com ardor, em terra árida, seca e sem água.
-Assim na tua santidade, eu te contemplava para ver o teu poder e a tua glória.
-Porque a tua benignidade é melhor do que a vida, os meus lábios te louvarão.
-Assim eu te bendoarei enquanto viver; em teu nome levantarei as minhas mãos.
-A minha alma se fartará de gordura e de abundância, e a minha boca te louvará com lábios jubilosos.
-Quando eu me lembrar de ti na minha cama, nas vigílias da noite, em ti meditarei.`
-    },
-    91: {
-      intro: 'Salmo de proteção e segurança divina. "Aquele que habita no esconderijo do Altíssimo, à sombra do Todo-Poderoso repousará." Quando você precisa sentir-se seguro nas mãos de Deus.',
-      text: `Aquele que habita no esconderijo do Altíssimo, à sombra do Todo-Poderoso repousará.
-Direi do Senhor: Ele é o meu refúgio e a minha fortaleza, o meu Deus, em quem confio.
-Porque te livrará do laço do caçador, e da peste perniciosa.
-Ele te cobrirá com as suas penas, e debaixo das suas asas estarás seguro; a sua verdade é escudo.
-Não temerás o terror da noite, nem da seta que voa de dia, nem da peste que anda na escuridão.
-Porque fizeste do Senhor o teu refúgio, do Altíssimo a tua habitação, não te sobrevirá mal algum.`
-    },
-    100: {
-      intro: 'Salmo de louvor e ação de graças. Um cântico de alegria e celebração. "Entrai por suas portas com gratidão, e em seus átrios com louvor." Quando o coração transborda de gratidão.',
-      text: `Fazei alegre barulho ao Senhor, todos vós, habitantes da terra.
-Servi o Senhor com alegria; apresentai-vos perante ele com cânticos.
-Sabei que o Senhor é Deus; foi ele que nos fez, e não nós a nós mesmos; somos povo seu.
-Entrai por suas portas com gratidão, e em seus átrios com louvor; louvai-o e bendizei o seu nome.
-Porque o Senhor é bom, e a sua misericórdia dura para sempre; e a sua verdade de geração em geração.`
-    },
-    139: {
-      intro: 'Salmo de conhecimento divino. "Senhor, tu me sondaste e conheceste." Um salmo profundo sobre ser completamente conhecido e amado por Deus.',
-      text: `Senhor, tu me sondaste, e me conheceste.
-Tu conheces o meu assentar e o meu levantar; de longe entendes os meus pensamentos.
-Cercaste-me pela frente e por trás, e puseste sobre mim a tua mão.
-Tal conhecimento é maravilhosamente alto para mim; não o posso atingir.
-Para onde me irei do teu Espírito? Ou para onde fugirei da tua presença?
-Se subir ao céu, tu ali estás; se fizer a cama no inferno, eis que tu ali estás também.
-Porque maravilhosamente fui feito; maravilhosas são as tuas obras, e a minha alma o sabe muito bem.`
-    }
-  };
 
   const psalmSelect = document.getElementById('psalmSelect');
   const psalmContent = document.getElementById('psalmContent');
