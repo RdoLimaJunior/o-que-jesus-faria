@@ -54,6 +54,7 @@
     { id: 'nPczCjzI2devNBz1zQrb', name: 'João',     desc: 'Sábio e caloroso, o discípulo amado' },
     { id: 'XrExE9yKIg1WjnnlVkGX', name: 'Madalena', desc: 'Suave e maternal, compaixão transformada' },
     { id: 'EXAVITQu4vr4xnSDxMaL', name: 'Débora',   desc: 'Serena e contemplativa, profetisa e juíza' },
+    { id: 'zikw3FmGal7NOLtzFqg1', name: 'Sua Voz',   desc: 'Voz personalizada e única' },
   ];
 
   let elevenLabsVoiceId = localStorage.getItem('elevenLabsVoiceId') || VOICES[0].id;
