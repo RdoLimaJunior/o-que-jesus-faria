@@ -1,11 +1,6 @@
 {
   "buildCommand": "npm install",
   "devCommand": "vercel dev",
-  "functions": {
-    "api/*.js": {
-      "runtime": "node24.x"
-    }
-  },
   "headers": [
     {
       "source": "/manifest.webmanifest",
