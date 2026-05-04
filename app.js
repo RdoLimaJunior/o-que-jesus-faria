@@ -312,7 +312,13 @@
 
   async function askJesus() {
     const situation = situationEl.value.trim();
-    if (!situation) { situationEl.focus(); return; }
+    console.log('📝 Situação digitada:', situation);
+
+    if (!situation) {
+      console.warn('⚠️ Campo vazio!');
+      situationEl.focus();
+      return;
+    }
 
     responseArea.hidden = true;
     errorMsgEl.hidden = true;
@@ -320,16 +326,27 @@
     askBtn.disabled = true;
 
     try {
+      const payload = { situation };
+      console.log('📤 Enviando para /api/wisdom:', payload);
+
       const res = await fetch('/api/wisdom', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ situation })
+        body: JSON.stringify(payload)
       });
+
+      console.log('📥 Resposta do servidor:', res.status);
 
       if (!res.ok) {
         const errorData = await res.text();
-        console.error('API Error Response:', errorData);
-        throw new Error(`Status ${res.status}: ${errorData}`);
+        console.error('❌ Erro do servidor (Status ' + res.status + '):', errorData);
+        try {
+          const errorJson = JSON.parse(errorData);
+          console.error('Mensagem de erro:', errorJson.error);
+          throw new Error(`Status ${res.status}: ${errorJson.error}`);
+        } catch (e) {
+          throw new Error(`Status ${res.status}: ${errorData || 'Resposta vazia'}`);
+        }
       }
 
       const parsed = await res.json();
