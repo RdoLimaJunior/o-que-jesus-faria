@@ -3,7 +3,7 @@
   "devCommand": "vercel dev",
   "functions": {
     "api/*.js": {
-      "runtime": "nodejs24.x"
+      "runtime": "node24.x"
     }
   },
   "headers": [
