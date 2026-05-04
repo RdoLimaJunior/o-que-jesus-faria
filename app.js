@@ -485,7 +485,53 @@
   let psalmsData = [];
   let psalmsDb = {};
 
-  // Load all 150 psalms from JSON and Bible API
+  // IndexedDB para guardar todos os 150 salmos
+  const DB_NAME = 'OQueJesusFaria';
+  const STORE_NAME = 'psalms';
+
+  function openDB() {
+    return new Promise((resolve, reject) => {
+      const req = indexedDB.open(DB_NAME, 1);
+      req.onupgradeneeded = (e) => {
+        const db = e.target.result;
+        if (!db.objectStoreNames.contains(STORE_NAME)) {
+          db.createObjectStore(STORE_NAME, { keyPath: 'numero' });
+        }
+      };
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  async function savePsalmToDB(psalm) {
+    try {
+      const db = await openDB();
+      const tx = db.transaction(STORE_NAME, 'readwrite');
+      tx.objectStore(STORE_NAME).put(psalm);
+      return new Promise((resolve, reject) => {
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error);
+      });
+    } catch (err) {
+      console.error('Erro ao salvar Salmo:', err);
+    }
+  }
+
+  async function getPsalmFromDB(numero) {
+    try {
+      const db = await openDB();
+      const tx = db.transaction(STORE_NAME, 'readonly');
+      const req = tx.objectStore(STORE_NAME).get(Number(numero));
+      return new Promise((resolve) => {
+        req.onsuccess = () => resolve(req.result);
+      });
+    } catch (err) {
+      console.error('Erro ao buscar Salmo do DB:', err);
+      return null;
+    }
+  }
+
+  // Load all 150 psalms from JSON and Bible API, save to IndexedDB
   async function loadPsalms() {
     try {
       const res = await fetch('/salmos.json');
@@ -500,7 +546,7 @@
           tipo: s.tipo,
           autor: s.autor,
           intro: `${s.titulo}\n\nAutor: ${s.autor}\nTipo: ${s.tipo}\n\nEste Salmo oferece consolo, força e esperança através da Palavra de Deus.`,
-          text: s.texto || null, // Will load from API if null
+          text: s.texto || null,
           numero: s.numero
         };
       });
@@ -514,17 +560,39 @@
         opt.textContent = `Salmo ${s.numero} — ${s.titulo}`;
         select.appendChild(opt);
       });
+
+      // Carrega textos de todos os 150 salmos em background
+      console.log('📖 Carregando todos os 150 Salmos...');
+      for (const s of salmos) {
+        const cached = await getPsalmFromDB(s.numero);
+        if (!cached || !cached.text) {
+          const text = await getPsalmText(s.numero);
+          if (text) {
+            await savePsalmToDB({
+              numero: s.numero,
+              titulo: s.titulo,
+              texto: text,
+              tipo: s.tipo,
+              autor: s.autor
+            });
+          }
+        }
+      }
+      console.log('✅ Todos os Salmos carregados e guardados!');
     } catch (err) {
       console.error('Error loading psalms:', err);
-      alert('Erro ao carregar os Salmos. Verifique sua conexão.');
     }
   }
 
   // Load psalm text from Bible API if not in local JSON
   async function getPsalmText(psalmNumber) {
-    const psalm = psalmsDb[psalmNumber];
+    // Try IndexedDB first
+    const cached = await getPsalmFromDB(psalmNumber);
+    if (cached && cached.texto) {
+      return cached.texto;
+    }
 
-    // If we already have the text, return it
+    const psalm = psalmsDb[psalmNumber];
     if (psalm && psalm.text) {
       return psalm.text;
     }
@@ -546,10 +614,10 @@
           if (verseRes.ok) {
             const verseData = await verseRes.json();
             const text = verseData.data?.content || null;
-            if (text && psalm) {
-              psalm.text = text;
+            if (text) {
+              if (psalm) psalm.text = text;
+              return text;
             }
-            return text;
           }
         }
       }
@@ -557,8 +625,7 @@
       console.error(`Erro ao buscar Salmo ${psalmNumber}:`, err);
     }
 
-    // Fallback: return generic message
-    return `[Salmo ${psalmNumber} - Meditação disponível. Para ler o texto completo, consulte uma Bíblia.]`;
+    return `[Salmo ${psalmNumber} - Meditação disponível.]`;
   }
 
   loadPsalms();
