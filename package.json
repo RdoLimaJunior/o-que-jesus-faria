@@ -4,5 +4,14 @@
   "private": true,
   "engines": {
     "node": "18.x"
+  },
+  "scripts": {
+    "dev": "http-server -p 8000 -o -c-1",
+    "dev:vercel": "vercel dev",
+    "start": "http-server -p 8000"
+  },
+  "devDependencies": {
+    "http-server": "^14.1.1",
+    "vercel": "^28.0.0"
   }
 }
