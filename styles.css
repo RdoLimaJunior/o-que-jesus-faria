@@ -893,14 +893,56 @@ textarea::placeholder, input::placeholder { color: #b0965a; font-style: italic; 
   background: rgba(255,240,240,.7);
 }
 
-/* ════════ MODAL ════════ */
+/* ════════ SETTINGS MODAL ════════ */
 .modal {
   position: fixed;
   inset: 0;
-  z-index: 100;
-  display: grid;
-  place-items: end center;
-  padding: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.settings-input {
+  width: 100%;
+  padding: 12px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(212,168,67,0.3);
+  border-radius: 8px;
+  color: #fff;
+  font-family: inherit;
+  margin-top: 8px;
+}
+
+.settings-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  background: rgba(255,255,255,0.08);
+}
+
+.speed-control {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-top: 10px;
+}
+
+.speed-control input[type="range"] {
+  flex: 1;
+  accent-color: var(--primary);
+}
+
+#speedValue {
+  font-family: 'Cinzel', serif;
+  color: var(--primary);
+  min-width: 45px;
+}
+
+.field__hint {
+  font-size: 0.8rem;
+  color: rgba(255,255,255,0.5);
+  margin-top: 6px;
 }
 .modal__backdrop {
   position: absolute;

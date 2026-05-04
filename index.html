@@ -298,6 +298,20 @@
         </div>
       </div>
 
+      <div class="field" style="margin-top: 20px;">
+        <label class="field__label">Velocidade da Voz</label>
+        <div class="speed-control">
+          <input type="range" id="voiceSpeed" min="0.5" max="1.5" step="0.1" value="0.8">
+          <span id="speedValue">0.8x</span>
+        </div>
+      </div>
+
+      <div class="field" style="margin-top: 20px;">
+        <label class="field__label">Chave API ElevenLabs (Opcional)</label>
+        <input type="password" id="elevenLabsKeyInput" class="settings-input" placeholder="Cole sua chave aqui...">
+        <p class="field__hint">Sua chave fica salva apenas no seu dispositivo.</p>
+      </div>
+
       <div class="modal__actions">
         <button class="btn btn-clear" id="testVoiceBtn">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>

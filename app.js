@@ -56,9 +56,10 @@
     { id: 'EXAVITQu4vr4xnSDxMaL', name: 'Sarah',    desc: 'Serena e contemplativa' },
   ];
 
-  const EMBEDDED_KEY = 'a6de55b0724f02d9fae3b6427310501c7916337ca3589f47520e53b41702c48f';
+  const EMBEDDED_KEY = ''; // Removido por segurança. Insira sua chave nas configurações do app.
   let elevenLabsApiKey = localStorage.getItem('elevenLabsKey') || EMBEDDED_KEY;
   let elevenLabsVoiceId = localStorage.getItem('elevenLabsVoiceId') || VOICES[0].id;
+  let voiceSpeed = parseFloat(localStorage.getItem('voiceSpeed')) || 0.8;
   const useElevenLabs = () => !!elevenLabsApiKey;
 
   // populate voice grid
@@ -80,14 +81,23 @@
   }
   renderVoiceGrid();
 
-  // settings modal
-  const settingsModal = document.getElementById('settingsModal');
-  const apiStatus = document.getElementById('apiStatus');
+  const voiceSpeedInput = document.getElementById('voiceSpeed');
+  const speedValueDisplay = document.getElementById('speedValue');
+  const elevenLabsKeyInput = document.getElementById('elevenLabsKeyInput');
 
   function openSettings() {
     settingsModal.hidden = false;
+    voiceSpeedInput.value = voiceSpeed;
+    speedValueDisplay.textContent = voiceSpeed + 'x';
+    elevenLabsKeyInput.value = elevenLabsApiKey;
     refreshStatus();
   }
+
+  voiceSpeedInput.addEventListener('input', (e) => {
+    const val = e.target.value;
+    speedValueDisplay.textContent = val + 'x';
+  });
+
   function closeSettings() {
     settingsModal.hidden = true;
   }
@@ -108,9 +118,15 @@
   }
 
   document.getElementById('saveSettingsBtn').addEventListener('click', () => {
+    elevenLabsApiKey = elevenLabsKeyInput.value.trim();
+    voiceSpeed = parseFloat(voiceSpeedInput.value);
+    
+    localStorage.setItem('elevenLabsKey', elevenLabsApiKey);
     localStorage.setItem('elevenLabsVoiceId', elevenLabsVoiceId);
+    localStorage.setItem('voiceSpeed', voiceSpeed);
+    
     refreshStatus();
-    toast('Voz salva');
+    toast('Configurações salvas');
     setTimeout(closeSettings, 600);
   });
 
@@ -239,7 +255,7 @@
     if (!synth) { toast('Áudio não suportado neste dispositivo'); return; }
     const utt = new SpeechSynthesisUtterance(text);
     utt.lang = 'pt-BR';
-    utt.rate = 0.78;
+    utt.rate = voiceSpeed;
     utt.pitch = 0.85;
     utt.volume = 1.0;
     const v = getBestBrowserVoice();
