@@ -212,7 +212,9 @@
         };
         src.start(0);
       } catch (err) {
-        console.error('ElevenLabs error:', err);
+        console.error('❌ Erro ao gerar áudio ElevenLabs:', err);
+        console.error('Detalhes:', { message: err.message, url: '/api/speak' });
+        toast('⚠️ Áudio via ElevenLabs falhou. Usando navegador...');
         if (btn) setBtnPlaying(btn, false, origLabel);
         currentBtn = null;
         // fall back to browser TTS
@@ -325,10 +327,16 @@
       });
 
       if (!res.ok) {
-        throw new Error(`Status ${res.status}`);
+        const errorData = await res.text();
+        console.error('API Error Response:', errorData);
+        throw new Error(`Status ${res.status}: ${errorData}`);
       }
 
       const parsed = await res.json();
+
+      if (!parsed.conselho) {
+        throw new Error('Resposta inválida do servidor: ' + JSON.stringify(parsed));
+      }
 
       counselTextEl.textContent = parsed.conselho || '';
       verseTextEl.textContent = `"${parsed.versiculo || ''}"`;
@@ -342,8 +350,13 @@
 
       fullResponseText = `${parsed.conselho} ... Palavra de Deus: ${parsed.versiculo} ${parsed.referencia || ''}`;
     } catch (err) {
-      console.error(err);
-      errorMsgEl.textContent = '✦ Não foi possível buscar agora. Verifique sua conexão e tente novamente.';
+      console.error('❌ Erro ao buscar sabedoria:', err);
+      console.error('Detalhes:', {
+        message: err.message,
+        status: err.status,
+        url: '/api/wisdom'
+      });
+      errorMsgEl.textContent = '✦ Erro: ' + (err.message || 'Não foi possível conectar ao servidor. Verifique sua conexão.');
       errorMsgEl.hidden = false;
     } finally {
       showLoading(false);
