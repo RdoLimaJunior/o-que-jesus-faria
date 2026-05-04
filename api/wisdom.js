@@ -31,33 +31,10 @@ Para qualquer situação:
 Responda APENAS em JSON válido (sem markdown, sem comentários):
 {"conselho": "...", "versiculo": "...", "referencia": "Livro Cap:Ver"}`;
 
-    const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        system_instruction: {
-          parts: {
-            text: systemPrompt
-          }
-        },
-        contents: {
-          parts: {
-            text: situation
-          }
-        }
-      }),
-      params: {
-        key: apiKey
-      }
-    });
-
-    // Construir URL com query param corretamente
     const url = new URL('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent');
     url.searchParams.append('key', apiKey);
 
-    const response2 = await fetch(url.toString(), {
+    const response = await fetch(url.toString(), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -76,29 +53,34 @@ Responda APENAS em JSON válido (sem markdown, sem comentários):
       })
     });
 
-    if (!response2.ok) {
-      const errorText = await response2.text();
+    if (!response.ok) {
+      const errorText = await response.text();
       console.error('Gemini API Error:', errorText);
-      return res.status(response2.status).json({ error: 'Erro ao chamar API do Gemini' });
+      return res.status(response.status).json({ error: 'Erro ao chamar API do Gemini' });
     }
 
-    const data = await response2.json();
+    const data = await response.json();
 
-    // Extrair texto da resposta do Gemini
     const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
 
     if (!generatedText) {
+      console.error('Empty response from Gemini');
       return res.status(500).json({ error: 'Resposta vazia do Gemini' });
     }
 
-    // Parse JSON da resposta
     const clean = String(generatedText).replace(/```json|```/g, '').trim();
     const start = clean.indexOf('{');
     const end = clean.lastIndexOf('}');
-    const jsonStr = (start >= 0 && end > start) ? clean.slice(start, end + 1) : clean;
+
+    if (start === -1 || end === -1) {
+      console.error('Could not parse JSON from response:', clean);
+      return res.status(500).json({ error: 'Formato de resposta inválido' });
+    }
+
+    const jsonStr = clean.slice(start, end + 1);
     const parsed = JSON.parse(jsonStr);
 
-    res.status(200).json({
+    return res.status(200).json({
       conselho: parsed.conselho || '',
       versiculo: parsed.versiculo || '',
       referencia: parsed.referencia || ''

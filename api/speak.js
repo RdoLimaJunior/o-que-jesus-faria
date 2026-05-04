@@ -38,12 +38,12 @@ module.exports = async (req, res) => {
     if (!response.ok) {
       const errorText = await response.text();
       console.error('ElevenLabs Error:', errorText);
-      return res.status(response.status).send(errorText);
+      return res.status(response.status).json({ error: 'Erro ao gerar áudio: ' + errorText });
     }
 
     const audioBuffer = await response.arrayBuffer();
     res.setHeader('Content-Type', 'audio/mpeg');
-    res.send(Buffer.from(audioBuffer));
+    res.end(Buffer.from(audioBuffer));
 
   } catch (error) {
     console.error('Server Error:', error);
