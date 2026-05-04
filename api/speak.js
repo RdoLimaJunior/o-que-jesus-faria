@@ -1,5 +1,3 @@
-const fetch = require('node-fetch');
-
 module.exports = async (req, res) => {
   // Apenas aceita POST
   if (req.method !== 'POST') {
@@ -10,7 +8,12 @@ module.exports = async (req, res) => {
   const apiKey = process.env.ELEVEN_LABS_API_KEY;
 
   if (!apiKey) {
-    return res.status(500).json({ error: 'API Key not configured on Vercel' });
+    console.error('ELEVEN_LABS_API_KEY is missing');
+    return res.status(500).json({ error: 'Chave API não configurada na Vercel' });
+  }
+
+  if (!text || !voice_id) {
+    return res.status(400).json({ error: 'Texto ou Voice ID faltando' });
   }
 
   try {
@@ -33,17 +36,17 @@ module.exports = async (req, res) => {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      return res.status(response.status).json(errorData);
+      const errorText = await response.text();
+      console.error('ElevenLabs Error:', errorText);
+      return res.status(response.status).send(errorText);
     }
 
-    // Retorna o áudio como um stream
     const audioBuffer = await response.arrayBuffer();
     res.setHeader('Content-Type', 'audio/mpeg');
     res.send(Buffer.from(audioBuffer));
 
   } catch (error) {
-    console.error('Error in TTS proxy:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error('Server Error:', error);
+    res.status(500).json({ error: 'Erro interno no servidor' });
   }
 };
