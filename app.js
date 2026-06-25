@@ -5,6 +5,25 @@
 (() => {
   'use strict';
 
+  // Load environment variables from /api/env (Vercel)
+  async function loadEnvVars() {
+    try {
+      const response = await fetch('/api/env');
+      if (response.ok) {
+        const env = await response.json();
+        window.API_CONFIG.GROQ_API_KEY = env.GROQ_API_KEY || window.API_CONFIG.GROQ_API_KEY;
+        window.API_CONFIG.NVIDIA_API_KEY = env.NVIDIA_API_KEY || window.API_CONFIG.NVIDIA_API_KEY;
+        window.API_CONFIG.BIBLIAAPI_KEY = env.BIBLIAAPI_KEY || window.API_CONFIG.BIBLIAAPI_KEY;
+      }
+    } catch (e) {
+      // Fallback to config.local.js values (local dev)
+      console.log('Using local config');
+    }
+  }
+
+  // Load env vars immediately
+  loadEnvVars();
+
   // ════════ PARTICLES ════════
   const particlesEl = document.getElementById('particles');
   for (let i = 0; i < 18; i++) {
@@ -596,17 +615,8 @@ Responda APENAS em JSON válido (sem markdown, sem comentários):
     }
 
     try {
-      // 3. Buscar de BíbliaAPI (Gratuito, com ou sem API key)
-      const headers = { 'Accept': 'application/json' };
-      const apiKey = window.API_CONFIG?.BIBLIAAPI_KEY;
-      if (apiKey && apiKey !== 'sua_chave_bibliaapi_aqui') {
-        headers['Authorization'] = `Bearer ${apiKey}`;
-      }
-
-      const res = await fetch(
-        `${window.API_CONFIG.endpoints.bibliaapi}Salmos+${psalmNumber}?translation=jfa`,
-        { headers }
-      );
+      // 3. Buscar de /api/psalms (Vercel Function proxy para evitar CORS)
+      const res = await fetch(`/api/psalms?number=${psalmNumber}`);
 
       if (!res.ok) {
         return `[Salmo ${psalmNumber} - Texto não disponível.]`;

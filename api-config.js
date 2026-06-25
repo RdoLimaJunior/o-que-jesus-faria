@@ -1,8 +1,11 @@
-/* API Configuration - Add your API keys to config.local.js */
+/* API Configuration - Read from window vars or environment */
+// In Vercel: loaded from Environment Variables
+// Local: add keys to config.local.js before app.js loads
+
 window.API_CONFIG = {
-  GROQ_API_KEY: '',
-  NVIDIA_API_KEY: '',
-  BIBLIAAPI_KEY: '',
+  GROQ_API_KEY: window.GROQ_API_KEY || '',
+  NVIDIA_API_KEY: window.NVIDIA_API_KEY || '',
+  BIBLIAAPI_KEY: window.BIBLIAAPI_KEY || '',
 
   endpoints: {
     groq: 'https://api.groq.com/openai/v1/chat/completions',
