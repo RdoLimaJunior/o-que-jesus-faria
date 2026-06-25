@@ -176,8 +176,12 @@
       });
 
       if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(`Synthesis error ${res.status}: ${errorData.error || 'Unknown error'}`);
+        // Fallback to Web Speech if /api/synthesize fails (local dev, Vercel Function not available)
+        if (btn) setBtnPlaying(btn, false, origLabel);
+        currentBtn = null;
+        console.warn('Nvidia Synthesis unavailable, using Web Speech API fallback');
+        browserSpeak(text, btn, origLabel);
+        return;
       }
 
       const audioBlob = await res.blob();

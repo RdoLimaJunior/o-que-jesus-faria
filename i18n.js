@@ -177,5 +177,9 @@ window.I18N = {
   }
 };
 
-// Initialize on load
-document.addEventListener('DOMContentLoaded', () => window.I18N.init());
+// Initialize immediately and on load
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => window.I18N.init());
+} else {
+  window.I18N.init();
+}
