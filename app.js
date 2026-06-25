@@ -82,7 +82,7 @@
     settingsModal.hidden = false;
     const modelSelect = document.getElementById('modelSelect');
     if (modelSelect) {
-      modelSelect.value = localStorage.getItem('preferredModel') || 'gemini';
+      modelSelect.value = localStorage.getItem('preferredModel') || 'groq';
     }
     refreshStatus();
   }
@@ -374,7 +374,7 @@ Para qualquer situação:
 Responda APENAS em JSON válido (sem markdown, sem comentários):
 {"conselho": "...", "versiculo": "...", "referencia": "Livro Cap:Ver"}`;
 
-      const preferredModel = localStorage.getItem('preferredModel') || 'gemini';
+      const preferredModel = localStorage.getItem('preferredModel') || 'groq';
       let generatedText = '';
 
       if (preferredModel === 'groq' && window.API_CONFIG?.GROQ_API_KEY) {
