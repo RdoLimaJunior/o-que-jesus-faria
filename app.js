@@ -151,11 +151,6 @@
     if (btn) btn.dataset.label = origLabel;
 
     try {
-      const apiKey = window.API_CONFIG?.NVIDIA_API_KEY;
-      if (!apiKey) {
-        throw new Error('Chave Nvidia não configurada');
-      }
-
       if (btn) {
         const labelEl = btn.querySelector('.speak-label');
         if (labelEl) labelEl.textContent = 'Carregando…';
@@ -163,10 +158,10 @@
         currentBtn = btn;
       }
 
-      const res = await fetch(window.API_CONFIG.endpoints.nvidiaAudio, {
+      // Call Vercel Function (proxies Nvidia API)
+      const res = await fetch('/api/synthesize', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${apiKey}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
@@ -181,7 +176,8 @@
       });
 
       if (!res.ok) {
-        throw new Error(`Nvidia API error ${res.status}`);
+        const errorData = await res.json();
+        throw new Error(`Synthesis error ${res.status}: ${errorData.error || 'Unknown error'}`);
       }
 
       const audioBlob = await res.blob();
@@ -201,6 +197,7 @@
 
       audio.play();
     } catch (err) {
+      console.error('Audio Error:', err);
       toast('⚠️ Áudio via Nvidia falhou. Usando navegador...');
       if (btn) setBtnPlaying(btn, false, origLabel);
       currentBtn = null;
