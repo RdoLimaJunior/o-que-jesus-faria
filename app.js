@@ -80,10 +80,6 @@
 
   function openSettings() {
     settingsModal.hidden = false;
-    const modelSelect = document.getElementById('modelSelect');
-    if (modelSelect) {
-      modelSelect.value = localStorage.getItem('preferredModel') || 'groq';
-    }
     refreshStatus();
   }
 
@@ -103,10 +99,6 @@
 
   document.getElementById('saveSettingsBtn').addEventListener('click', () => {
     localStorage.setItem('elevenLabsVoiceId', elevenLabsVoiceId);
-    const modelSelect = document.getElementById('modelSelect');
-    if (modelSelect) {
-      localStorage.setItem('preferredModel', modelSelect.value);
-    }
     refreshStatus();
     toast('Configurações salvas');
     setTimeout(closeSettings, 600);
@@ -321,28 +313,47 @@
       throw new Error('Chave de API do Groq não configurada');
     }
 
+    const requestBody = {
+      model: window.API_CONFIG.models.groq,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: situation }
+      ],
+      temperature: 0.7,
+      max_tokens: 1024
+    };
+
+    console.log('Groq Request:', {
+      url: window.API_CONFIG?.endpoints?.groq,
+      model: window.API_CONFIG.models.groq,
+      hasApiKey: !!apiKey
+    });
+
     const res = await fetch(window.API_CONFIG?.endpoints?.groq, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${apiKey}`
       },
-      body: JSON.stringify({
-        model: window.API_CONFIG.models.groq,
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: situation }
-        ],
-        temperature: 0.7,
-        max_tokens: 1024
-      })
+      body: JSON.stringify(requestBody)
     });
 
     if (!res.ok) {
-      throw new Error(`Status ${res.status}: Erro ao chamar Groq API`);
+      const errorData = await res.text();
+      console.error('❌ Groq API Error Details:', {
+        status: res.status,
+        statusText: res.statusText,
+        error: errorData
+      });
+      try {
+        const errorJson = JSON.parse(errorData);
+        console.error('Error JSON:', errorJson);
+      } catch (e) {}
+      throw new Error(`Status ${res.status}: ${errorData || 'Erro ao chamar Groq API'}`);
     }
 
     const data = await res.json();
+    console.log('✅ Groq Response:', data);
     return data.choices?.[0]?.message?.content || '';
   }
 
@@ -374,43 +385,15 @@ Para qualquer situação:
 Responda APENAS em JSON válido (sem markdown, sem comentários):
 {"conselho": "...", "versiculo": "...", "referencia": "Livro Cap:Ver"}`;
 
-      const preferredModel = localStorage.getItem('preferredModel') || 'groq';
-      let generatedText = '';
-
-      if (preferredModel === 'groq' && window.API_CONFIG?.GROQ_API_KEY) {
-        generatedText = await callGroqAPI(situation, systemPrompt);
-      } else if (preferredModel === 'gemini' || !window.API_CONFIG?.GROQ_API_KEY) {
-        const apiKey = window.API_CONFIG?.GEMINI_API_KEY;
-        if (!apiKey) {
-          throw new Error('Chave de API do Gemini não configurada');
-        }
-
-        const url = new URL(window.API_CONFIG.endpoints.gemini);
-        url.searchParams.append('key', apiKey);
-
-        const res = await fetch(url.toString(), {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            system_instruction: {
-              parts: { text: systemPrompt }
-            },
-            contents: {
-              parts: { text: situation }
-            }
-          })
-        });
-
-        if (!res.ok) {
-          throw new Error(`Status ${res.status}: Erro ao chamar Gemini API`);
-        }
-
-        const data = await res.json();
-        generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      const apiKey = window.API_CONFIG?.GROQ_API_KEY;
+      if (!apiKey) {
+        throw new Error('Chave de API do Groq não configurada');
       }
 
+      const generatedText = await callGroqAPI(situation, systemPrompt);
+
       if (!generatedText) {
-        throw new Error('Resposta vazia da API');
+        throw new Error('Resposta vazia do Groq');
       }
 
       const clean = String(generatedText).replace(/```json|```/g, '').trim();
