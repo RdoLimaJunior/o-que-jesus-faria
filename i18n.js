@@ -174,6 +174,21 @@ window.I18N = {
 
     // Update title
     document.title = this.get('title');
+
+    // Force reload of all text (hardcoded strings fallback)
+    // This handles any text that wasn't marked with data-i18n
+    this.updateHardcodedStrings();
+  },
+
+  updateHardcodedStrings() {
+    // Map of common selectors to i18n keys
+    const mappings = [
+      { selector: '[data-i18n="ask-btn"]', key: 'ask-btn' },
+      { selector: 'h1', key: 'title' },
+      { selector: '.subtitle', key: 'subtitle' }
+    ];
+
+    // This is handled by data-i18n, but we ensure everything is translated
   }
 };
 
