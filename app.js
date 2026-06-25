@@ -48,35 +48,8 @@
     toastTimer = setTimeout(() => { toastEl.hidden = true; }, 2400);
   }
 
-  // ════════ ELEVENLABS / AUDIO ════════
-  const VOICES = [
-    { id: 'pqHfZKP75CvOlQylNhV4', name: 'Moisés',    desc: 'Grave e profundo, autoridade divina' },
-    { id: 'nPczCjzI2devNBz1zQrb', name: 'João',     desc: 'Sábio e caloroso, o discípulo amado' },
-    { id: 'XrExE9yKIg1WjnnlVkGX', name: 'Madalena', desc: 'Suave e maternal, compaixão transformada' },
-    { id: 'EXAVITQu4vr4xnSDxMaL', name: 'Débora',   desc: 'Serena e contemplativa, profetisa e juíza' },
-    { id: 'zikw3FmGal7NOLtzFqg1', name: 'Padre',    desc: 'Voz acolhedora e espiritual, guia de fé' },
-  ];
-
-  let elevenLabsVoiceId = localStorage.getItem('elevenLabsVoiceId') || VOICES[0].id;
-
-  // populate voice grid
-  const voiceGrid = document.getElementById('voiceGrid');
-  function renderVoiceGrid() {
-    voiceGrid.innerHTML = '';
-    VOICES.forEach(v => {
-      const card = document.createElement('button');
-      card.type = 'button';
-      card.className = 'voice-card' + (v.id === elevenLabsVoiceId ? ' selected' : '');
-      card.dataset.id = v.id;
-      card.innerHTML = `<div class="voice-card__name">${v.name}</div><div class="voice-card__desc">${v.desc}</div>`;
-      card.addEventListener('click', () => {
-        elevenLabsVoiceId = v.id;
-        renderVoiceGrid();
-      });
-      voiceGrid.appendChild(card);
-    });
-  }
-  renderVoiceGrid();
+  // ════════ NVIDIA AUDIO ════════
+  // Voz padrão: "Padre" (voz acolhedora e espiritual, guia de fé)
 
   function openSettings() {
     settingsModal.hidden = false;
@@ -98,14 +71,13 @@
   }
 
   document.getElementById('saveSettingsBtn').addEventListener('click', () => {
-    localStorage.setItem('elevenLabsVoiceId', elevenLabsVoiceId);
     refreshStatus();
     toast('Configurações salvas');
     setTimeout(closeSettings, 600);
   });
 
   document.getElementById('testVoiceBtn').addEventListener('click', () => {
-    speakText('A paz esteja com você. Esta é uma demonstração da voz escolhida.', null, elevenLabsApiKey, elevenLabsVoiceId);
+    speakText('A paz esteja com você. Esta é uma demonstração da voz Padre do Nvidia ResembleAI.');
   });
 
   // ════════ SPEECH (browser TTS + ElevenLabs) ════════
@@ -155,7 +127,7 @@
     }
   }
 
-  async function speakText(text, btn, apiKeyOverride, voiceIdOverride) {
+  async function speakText(text, btn) {
     if (!text) return;
 
     if (btn && currentBtn === btn) {
@@ -164,14 +136,13 @@
     }
     stopAll();
 
-    const voice = voiceIdOverride || elevenLabsVoiceId;
     const origLabel = btn ? (btn.querySelector('.speak-label')?.textContent || 'Ouvir em voz alta') : '';
     if (btn) btn.dataset.label = origLabel;
 
     try {
-      const apiKey = window.API_CONFIG?.ELEVEN_LABS_API_KEY;
+      const apiKey = window.API_CONFIG?.NVIDIA_API_KEY;
       if (!apiKey) {
-        throw new Error('ElevenLabs API key não configurada');
+        throw new Error('Chave Nvidia não configurada');
       }
 
       if (btn) {
@@ -181,41 +152,45 @@
         currentBtn = btn;
       }
 
-      const res = await fetch(`${window.API_CONFIG.endpoints.elevenLabs}/${voice}`, {
+      const res = await fetch(window.API_CONFIG.endpoints.nvidiaAudio, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'xi-api-key': apiKey
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          text,
-          model_id: 'eleven_monolingual_v1',
-          voice_settings: { stability: 0.5, similarity_boost: 0.75 }
+          text: text,
+          language: window.API_CONFIG.audio.language,
+          voice_name: window.API_CONFIG.audio.voice,
+          encoding: window.API_CONFIG.audio.encoding,
+          sample_rate_hz: window.API_CONFIG.audio.sampleRate,
+          rate: window.API_CONFIG.audio.rate,
+          emotion_control: window.API_CONFIG.audio.emotion
         })
       });
 
       if (!res.ok) {
-        throw new Error(`ElevenLabs error ${res.status}`);
+        throw new Error(`Nvidia API error ${res.status}`);
       }
 
-      const buf = await res.arrayBuffer();
-      const ctx = new (window.AudioContext || window.webkitAudioContext)();
-      const audioBuf = await ctx.decodeAudioData(buf);
-      const src = ctx.createBufferSource();
-      src.buffer = audioBuf;
-      src.connect(ctx.destination);
-      currentSource = src;
+      const audioBlob = await res.blob();
+      const audioUrl = URL.createObjectURL(audioBlob);
+      const audio = new Audio(audioUrl);
+
       if (btn) setBtnPlaying(btn, true, 'Parar');
-      src.onended = () => {
-        if (currentSource === src) currentSource = null;
+      currentSource = audio;
+
+      audio.onended = () => {
+        if (currentSource === audio) currentSource = null;
         if (currentBtn === btn) {
           setBtnPlaying(btn, false, origLabel);
           currentBtn = null;
         }
       };
-      src.start(0);
+
+      audio.play();
     } catch (err) {
-      toast('⚠️ Áudio via ElevenLabs falhou. Usando navegador...');
+      toast('⚠️ Áudio via Nvidia falhou. Usando navegador...');
       if (btn) setBtnPlaying(btn, false, origLabel);
       currentBtn = null;
       browserSpeak(text, btn, origLabel);
