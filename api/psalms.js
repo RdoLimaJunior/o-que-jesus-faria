@@ -1,6 +1,6 @@
 // Vercel Function to proxy BíbliaAPI (avoids CORS issues)
 
-export default async function handler(req, res) {
+module.exports = async (req, res) => {
   const { number } = req.query;
 
   if (!number) {
@@ -35,4 +35,4 @@ export default async function handler(req, res) {
       details: error.message
     });
   }
-}
+};

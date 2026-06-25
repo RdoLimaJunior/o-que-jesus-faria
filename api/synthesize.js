@@ -1,7 +1,7 @@
 // Vercel Function to proxy Nvidia ResembleAI TTS API
 // This avoids CORS issues by calling the API from the backend
 
-export default async function handler(req, res) {
+module.exports = async (req, res) => {
   // Only allow POST requests
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed' });
@@ -66,4 +66,4 @@ export default async function handler(req, res) {
       message: error.message
     });
   }
-}
+};
