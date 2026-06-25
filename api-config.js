@@ -2,7 +2,7 @@
 window.API_CONFIG = {
   GROQ_API_KEY: '',
   NVIDIA_API_KEY: '',
-  BIBLE_API_KEY: '',
+  BIBLIAAPI_KEY: '',
 
   endpoints: {
     groq: 'https://api.groq.com/openai/v1/chat/completions',

@@ -595,12 +595,16 @@ Responda APENAS em JSON válido (sem markdown, sem comentários):
     }
 
     try {
-      // 3. Buscar de BíbliaAPI (Gratuito, sem API key necessária)
+      // 3. Buscar de BíbliaAPI (Gratuito, com ou sem API key)
+      const headers = { 'Accept': 'application/json' };
+      const apiKey = window.API_CONFIG?.BIBLIAAPI_KEY;
+      if (apiKey && apiKey !== 'sua_chave_bibliaapi_aqui') {
+        headers['Authorization'] = `Bearer ${apiKey}`;
+      }
+
       const res = await fetch(
         `${window.API_CONFIG.endpoints.bibliaapi}Salmos+${psalmNumber}?translation=jfa`,
-        {
-          headers: { 'Accept': 'application/json' }
-        }
+        { headers }
       );
 
       if (!res.ok) {
