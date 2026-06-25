@@ -1,9 +1,9 @@
-/* API Configuration - Injected via environment variables */
+/* API Configuration - Add your API keys to config.local.js */
 window.API_CONFIG = {
-  GEMINI_API_KEY: process.env.GEMINI_API_KEY || '',
-  GROQ_API_KEY: process.env.GROQ_API_KEY || '',
-  ELEVEN_LABS_API_KEY: process.env.ELEVEN_LABS_API_KEY || '',
-  BIBLE_API_KEY: process.env.BIBLE_API_KEY || '',
+  GEMINI_API_KEY: '',
+  GROQ_API_KEY: '',
+  ELEVEN_LABS_API_KEY: '',
+  BIBLE_API_KEY: '',
 
   endpoints: {
     gemini: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent',

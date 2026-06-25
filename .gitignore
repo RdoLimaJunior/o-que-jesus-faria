@@ -3,6 +3,7 @@ node_modules/
 
 # Local env files
 .env*.local
+config.local.js
 
 # Editor directories and files
 .vscode/
