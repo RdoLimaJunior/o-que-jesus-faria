@@ -301,7 +301,17 @@
     </header>
 
     <div class="modal__body">
-      <p class="modal__intro">Voz divina ativada com Nvidia ResembleAI. Ouça as Escrituras em português claro e natural.</p>
+      <p class="modal__intro" data-i18n="settings-intro">Voz divina ativada com Nvidia ResembleAI. Ouça as Escrituras em português claro e natural.</p>
+
+      <div class="field">
+        <label class="field__label" for="languageSelect" data-i18n="language-label">Idioma</label>
+        <select id="languageSelect" class="language-select" aria-label="Selecionar idioma">
+          <option value="pt-BR">🇧🇷 Português (Brasil)</option>
+          <option value="pt">🇵🇹 Português (Portugal)</option>
+          <option value="en">🇬🇧 English</option>
+          <option value="es">🇪🇸 Español</option>
+        </select>
+      </div>
 
       <div class="modal__actions">
         <button class="btn btn-clear" id="testVoiceBtn">
@@ -321,6 +331,7 @@
 
 <script src="api-config.js"></script>
 <script src="config.local.js"></script>
+<script src="i18n.js"></script>
 <script src="app.js"></script>
 <script>
   // PWA: register service worker

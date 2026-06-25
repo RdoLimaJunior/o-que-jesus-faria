@@ -54,6 +54,10 @@
   function openSettings() {
     settingsModal.hidden = false;
     refreshStatus();
+    const langSelect = document.getElementById('languageSelect');
+    if (langSelect) {
+      langSelect.value = window.I18N.currentLang;
+    }
   }
 
   function closeSettings() {
@@ -72,9 +76,16 @@
 
   document.getElementById('saveSettingsBtn').addEventListener('click', () => {
     refreshStatus();
-    toast('Configurações salvas');
+    toast(window.I18N.get('settings-saved'));
     setTimeout(closeSettings, 600);
   });
+
+  const languageSelect = document.getElementById('languageSelect');
+  if (languageSelect) {
+    languageSelect.addEventListener('change', (e) => {
+      window.I18N.setLanguage(e.target.value);
+    });
+  }
 
   document.getElementById('testVoiceBtn').addEventListener('click', () => {
     speakText('A paz esteja com você. Esta é uma demonstração da voz Padre do Nvidia ResembleAI.');
