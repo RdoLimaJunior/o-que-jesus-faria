@@ -1099,6 +1099,39 @@ textarea::placeholder, input::placeholder { color: #b0965a; font-style: italic; 
   color: var(--text-quiet);
 }
 
+.modal__divider {
+  border: none;
+  border-top: 1px solid rgba(212, 168, 67, 0.2);
+  margin: 1.5rem 0;
+}
+
+.model-select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid rgba(212, 168, 67, 0.3);
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.3);
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  transition: all .2s;
+}
+.model-select:hover,
+.model-select:focus {
+  border-color: var(--gold);
+  background: rgba(0, 0, 0, 0.2);
+  outline: none;
+  box-shadow: 0 0 0 2px var(--gold-soft);
+}
+
+.model-hint {
+  display: block;
+  margin-top: 0.5rem;
+  color: rgba(212, 168, 67, 0.7);
+  font-size: .8rem;
+  font-style: italic;
+}
+
 .voice-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));

@@ -80,6 +80,10 @@
 
   function openSettings() {
     settingsModal.hidden = false;
+    const modelSelect = document.getElementById('modelSelect');
+    if (modelSelect) {
+      modelSelect.value = localStorage.getItem('preferredModel') || 'gemini';
+    }
     refreshStatus();
   }
 
@@ -99,6 +103,10 @@
 
   document.getElementById('saveSettingsBtn').addEventListener('click', () => {
     localStorage.setItem('elevenLabsVoiceId', elevenLabsVoiceId);
+    const modelSelect = document.getElementById('modelSelect');
+    if (modelSelect) {
+      localStorage.setItem('preferredModel', modelSelect.value);
+    }
     refreshStatus();
     toast('Configurações salvas');
     setTimeout(closeSettings, 600);
@@ -307,6 +315,37 @@
   }
   clearBtn.addEventListener('click', clearWisdom);
 
+  async function callGroqAPI(situation, systemPrompt) {
+    const apiKey = window.API_CONFIG?.GROQ_API_KEY;
+    if (!apiKey) {
+      throw new Error('Chave de API do Groq não configurada');
+    }
+
+    const res = await fetch(window.API_CONFIG?.endpoints?.groq, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model: window.API_CONFIG.models.groq,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: situation }
+        ],
+        temperature: 0.7,
+        max_tokens: 1024
+      })
+    });
+
+    if (!res.ok) {
+      throw new Error(`Status ${res.status}: Erro ao chamar Groq API`);
+    }
+
+    const data = await res.json();
+    return data.choices?.[0]?.message?.content || '';
+  }
+
   async function askJesus() {
     const situation = situationEl.value.trim();
 
@@ -321,11 +360,6 @@
     askBtn.disabled = true;
 
     try {
-      const apiKey = window.API_CONFIG?.GEMINI_API_KEY;
-      if (!apiKey) {
-        throw new Error('Chave de API do Gemini não configurada');
-      }
-
       const systemPrompt = `Você é uma voz amorosa e sábia que reflete os ensinamentos de Jesus Cristo no Evangelho.
 
 REGRAS:
@@ -340,32 +374,43 @@ Para qualquer situação:
 Responda APENAS em JSON válido (sem markdown, sem comentários):
 {"conselho": "...", "versiculo": "...", "referencia": "Livro Cap:Ver"}`;
 
-      const url = new URL(window.API_CONFIG.endpoints.gemini);
-      url.searchParams.append('key', apiKey);
+      const preferredModel = localStorage.getItem('preferredModel') || 'gemini';
+      let generatedText = '';
 
-      const res = await fetch(url.toString(), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          system_instruction: {
-            parts: { text: systemPrompt }
-          },
-          contents: {
-            parts: { text: situation }
-          }
-        })
-      });
+      if (preferredModel === 'groq' && window.API_CONFIG?.GROQ_API_KEY) {
+        generatedText = await callGroqAPI(situation, systemPrompt);
+      } else if (preferredModel === 'gemini' || !window.API_CONFIG?.GROQ_API_KEY) {
+        const apiKey = window.API_CONFIG?.GEMINI_API_KEY;
+        if (!apiKey) {
+          throw new Error('Chave de API do Gemini não configurada');
+        }
 
-      if (!res.ok) {
-        const errorData = await res.text();
-        throw new Error(`Status ${res.status}: Erro ao chamar Gemini API`);
+        const url = new URL(window.API_CONFIG.endpoints.gemini);
+        url.searchParams.append('key', apiKey);
+
+        const res = await fetch(url.toString(), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            system_instruction: {
+              parts: { text: systemPrompt }
+            },
+            contents: {
+              parts: { text: situation }
+            }
+          })
+        });
+
+        if (!res.ok) {
+          throw new Error(`Status ${res.status}: Erro ao chamar Gemini API`);
+        }
+
+        const data = await res.json();
+        generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
       }
 
-      const data = await res.json();
-      const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-
       if (!generatedText) {
-        throw new Error('Resposta vazia do Gemini');
+        throw new Error('Resposta vazia da API');
       }
 
       const clean = String(generatedText).replace(/```json|```/g, '').trim();
@@ -381,11 +426,11 @@ Responda APENAS em JSON válido (sem markdown, sem comentários):
       try {
         parsed = JSON.parse(jsonStr);
       } catch (parseErr) {
-        throw new Error('Resposta do Gemini está malformada');
+        throw new Error('Resposta está malformada');
       }
 
       if (!parsed.conselho || !parsed.versiculo) {
-        throw new Error('Resposta do Gemini incompleta');
+        throw new Error('Resposta incompleta');
       }
 
       counselTextEl.textContent = parsed.conselho || '';
