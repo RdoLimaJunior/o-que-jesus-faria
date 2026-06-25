@@ -7,7 +7,7 @@ window.API_CONFIG = {
   endpoints: {
     groq: 'https://api.groq.com/openai/v1/chat/completions',
     nvidiaAudio: 'https://integrate.api.nvidia.com/v1/audio/synthesize',
-    bible: 'https://api.api-bible.com/v1/bibles/de4e12af7f28f599-02'
+    bibliaapi: 'https://www.bible-api.com/'
   },
 
   models: {

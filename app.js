@@ -580,61 +580,48 @@ Responda APENAS em JSON válido (sem markdown, sem comentários):
   }
 
 
-  // Load psalm text from Bible API
+  // Load psalm text from BíbliaAPI (Gratuito & Otimizado para PT-BR)
   async function getPsalmText(psalmNumber) {
+    // 1. Verificar cache local (IndexedDB)
     const cached = await getPsalmFromDB(psalmNumber);
     if (cached && cached.texto) {
       return cached.texto;
     }
 
+    // 2. Verificar se já tem no banco de dados local
     const psalm = psalmsDb[psalmNumber];
     if (psalm && psalm.text) {
       return psalm.text;
     }
 
     try {
-      const apiKey = window.API_CONFIG?.BIBLE_API_KEY;
-      if (!apiKey) {
-        return `[Salmo ${psalmNumber} - Chave de API não configurada.]`;
-      }
+      // 3. Buscar de BíbliaAPI (Gratuito, sem API key necessária)
+      const res = await fetch(
+        `${window.API_CONFIG.endpoints.bibliaapi}Salmos+${psalmNumber}?translation=jfa`,
+        {
+          headers: { 'Accept': 'application/json' }
+        }
+      );
 
-      const searchUrl = `${window.API_CONFIG.endpoints.bible}/search?query=psalm%20${psalmNumber}&limit=1`;
-      const searchRes = await fetch(searchUrl, {
-        headers: { 'api-key': apiKey }
-      });
-
-      if (!searchRes.ok) {
+      if (!res.ok) {
         return `[Salmo ${psalmNumber} - Texto não disponível.]`;
       }
 
-      const searchData = await searchRes.json();
-      if (!searchData.results || searchData.results.length === 0) {
-        return `[Salmo ${psalmNumber} - Não encontrado.]`;
-      }
-
-      const verseId = searchData.results[0].verseId;
-      const textUrl = `${window.API_CONFIG.endpoints.bible}/verses/${verseId}?content-type=text`;
-      const textRes = await fetch(textUrl, {
-        headers: { 'api-key': apiKey }
-      });
-
-      if (!textRes.ok) {
-        return `[Salmo ${psalmNumber} - Erro ao buscar texto.]`;
-      }
-
-      const textData = await textRes.json();
-      const texto = textData.data?.content || '';
+      const data = await res.json();
+      const texto = data.text || '';
 
       if (!texto) {
         return `[Salmo ${psalmNumber} - Texto vazio.]`;
       }
 
+      // 4. Cachear para uso offline
       await savePsalmToDB({
         numero: psalmNumber,
-        titulo: psalm?.titulo || `Salmo ${psalmNumber}`,
+        titulo: `Salmo ${psalmNumber}`,
         texto: texto,
-        tipo: psalm?.tipo || 'Desconhecido',
-        autor: psalm?.autor || 'Desconhecido'
+        tipo: 'Salmo',
+        autor: 'Davi (maioria)',
+        referencia: data.reference || `Salmos ${psalmNumber}`
       });
 
       return texto;
