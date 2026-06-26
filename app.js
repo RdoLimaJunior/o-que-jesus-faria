@@ -766,6 +766,31 @@ Responda APENAS em JSON válido (sem markdown, sem comentários):
     speakText(txt, devotionSpeakBtn);
   });
 
+  // Devotion reflection save
+  const devotionReflectionInput = document.getElementById('devotionReflectionInput');
+  const devotionSaveReflectionBtn = document.getElementById('devotionSaveReflectionBtn');
+  const devotionSaveConfirm = document.getElementById('devotionSaveConfirm');
+
+  if (devotionSaveReflectionBtn) {
+    devotionSaveReflectionBtn.addEventListener('click', () => {
+      const text = devotionReflectionInput.value.trim();
+      if (!text) { toast('Escreva sua meditação antes de salvar'); return; }
+
+      const reflections = getReflectionsData();
+      reflections.unshift({
+        ref: devotion.r,
+        text: text,
+        ts: Date.now(),
+        favorite: false
+      });
+      saveReflectionsData(reflections);
+      devotionSaveConfirm.hidden = false;
+      devotionReflectionInput.value = '';
+      toast('✦ Meditação guardada');
+      setTimeout(() => { devotionSaveConfirm.hidden = true; }, 2000);
+    });
+  }
+
   // ════════ PRAYER JOURNAL ════════
   const prayerListEl = document.getElementById('prayerList');
   const prayerEmpty = document.getElementById('prayerEmpty');
@@ -876,6 +901,218 @@ Responda APENAS em JSON válido (sem markdown, sem comentários):
     installBanner.hidden = true;
     localStorage.setItem('installDismissed', '1');
   });
+
+  // ════════ ABA 2: BIBLE EXPLORER ════════
+  let currentBibleVersion = 'ACF';
+  let currentRandomVerse = null;
+
+  const bibleVersionSelect = document.getElementById('bibleVersionSelect') || (() => {
+    const sel = document.createElement('select');
+    sel.id = 'bibleVersionSelect';
+    sel.className = 'bible-select';
+    sel.innerHTML = '<option value="ACF">ACF - Almeida Corrigida</option><option value="ARA">ARA - Almeida Revista</option><option value="NVI">NVI - Nova Versão</option>';
+    document.querySelector('[data-tab="bible"]')?.insertAdjacentElement('afterbegin', sel);
+    return sel;
+  })();
+
+  async function getRandomVerse() {
+    try {
+      const res = await fetch(`/api/random?version=${currentBibleVersion}`);
+      if (!res.ok) throw new Error('Failed');
+      const data = await res.json();
+      currentRandomVerse = data;
+      return data;
+    } catch (err) {
+      console.error('Random verse error:', err);
+      toast('Erro ao carregar versículo aleatório');
+      return null;
+    }
+  }
+
+  async function searchVerses(query, limit = 10) {
+    try {
+      const res = await fetch(`/api/search?q=${encodeURIComponent(query)}&version=${currentBibleVersion}&limit=${limit}`);
+      if (!res.ok) throw new Error('Failed');
+      const data = await res.json();
+      return data.results || [];
+    } catch (err) {
+      console.error('Search error:', err);
+      toast('Erro ao buscar versículos');
+      return [];
+    }
+  }
+
+  async function getBooks() {
+    try {
+      const res = await fetch(`/api/books?version=${currentBibleVersion}`);
+      if (!res.ok) throw new Error('Failed');
+      const data = await res.json();
+      return data.books || [];
+    } catch (err) {
+      console.error('Books error:', err);
+      return [];
+    }
+  }
+
+  // ════════ ABA 4: HABITS ════════
+  const HABITS_KEY = 'habits_data';
+
+  function getHabitsData() {
+    try { return JSON.parse(localStorage.getItem(HABITS_KEY) || '{}'); } catch (e) { return {}; }
+  }
+
+  function saveHabitsData(data) {
+    localStorage.setItem(HABITS_KEY, JSON.stringify(data));
+  }
+
+  function getTodayKey() {
+    return new Date().toISOString().split('T')[0];
+  }
+
+  function getMonthKey() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  }
+
+  function updateHabitsDisplay() {
+    const data = getHabitsData();
+    const today = getTodayKey();
+    const month = getMonthKey();
+
+    // Church check-ins this month
+    const churchCount = Object.keys(data).filter(k => k.startsWith(month + '-') && data[k].church).length;
+    const churchEl = document.getElementById('churchCount');
+    if (churchEl) churchEl.textContent = `${churchCount} vezes este mês`;
+
+    // Bible reading this week
+    const weekDays = 7;
+    let bibleCount = 0;
+    for (let i = 0; i < weekDays; i++) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const key = d.toISOString().split('T')[0];
+      if (data[key]?.bible) bibleCount++;
+    }
+    const bibleEl = document.getElementById('bibleCount');
+    if (bibleEl) bibleEl.textContent = `${bibleCount}/5 dias esta semana`;
+    const bibleProgress = document.getElementById('bibleProgress');
+    if (bibleProgress) bibleProgress.style.width = `${(bibleCount / 5) * 100}%`;
+
+    // Prayer this week
+    let prayerCount = 0;
+    for (let i = 0; i < 7; i++) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const key = d.toISOString().split('T')[0];
+      if (data[key]?.prayer) prayerCount++;
+    }
+    const prayerEl = document.getElementById('prayerCount');
+    if (prayerEl) prayerEl.textContent = `${prayerCount}/7 dias esta semana`;
+    const prayerProgress = document.getElementById('prayerProgress');
+    if (prayerProgress) prayerProgress.style.width = `${(prayerCount / 7) * 100}%`;
+
+    // Stats
+    const statMsg = document.getElementById('statMessage');
+    if (churchCount > 0 || bibleCount > 0 || prayerCount > 0) {
+      if (statMsg) statMsg.textContent = '✦ Você está crescendo espiritualmente! 🌱';
+    }
+  }
+
+  document.getElementById('checkInChurch')?.addEventListener('click', () => {
+    const data = getHabitsData();
+    const today = getTodayKey();
+    if (!data[today]) data[today] = {};
+    data[today].church = true;
+    saveHabitsData(data);
+    updateHabitsDisplay();
+    toast('✦ Presença na Igreja registrada');
+  });
+
+  document.getElementById('checkInBible')?.addEventListener('click', () => {
+    const data = getHabitsData();
+    const today = getTodayKey();
+    if (!data[today]) data[today] = {};
+    data[today].bible = true;
+    saveHabitsData(data);
+    updateHabitsDisplay();
+    toast('✦ Leitura Bíblica registrada');
+  });
+
+  document.getElementById('checkInPrayer')?.addEventListener('click', () => {
+    const data = getHabitsData();
+    const today = getTodayKey();
+    if (!data[today]) data[today] = {};
+    data[today].prayer = true;
+    saveHabitsData(data);
+    updateHabitsDisplay();
+    toast('✦ Oração registrada');
+  });
+
+  updateHabitsDisplay();
+
+  // ════════ ABA 5: REFLECTIONS ════════
+  const REFLECTIONS_KEY = 'reflections_data';
+
+  function getReflectionsData() {
+    try { return JSON.parse(localStorage.getItem(REFLECTIONS_KEY) || '[]'); } catch (e) { return []; }
+  }
+
+  function saveReflectionsData(data) {
+    localStorage.setItem(REFLECTIONS_KEY, JSON.stringify(data));
+  }
+
+  function renderReflections(filter = '') {
+    const reflections = getReflectionsData();
+    const list = document.getElementById('reflectionsList');
+    const empty = document.getElementById('reflectionsEmpty');
+
+    let filtered = reflections;
+    if (filter === 'favorite') {
+      filtered = reflections.filter(r => r.favorite);
+    } else if (filter === 'week') {
+      const weekAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
+      filtered = reflections.filter(r => r.ts > weekAgo);
+    } else if (filter === 'month') {
+      const monthAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
+      filtered = reflections.filter(r => r.ts > monthAgo);
+    }
+
+    if (!list) return;
+
+    list.innerHTML = '';
+    if (filtered.length === 0) {
+      empty.hidden = false;
+      return;
+    }
+
+    empty.hidden = true;
+    filtered.forEach(r => {
+      const li = document.createElement('li');
+      li.className = 'reflection-item';
+      const date = new Date(r.ts).toLocaleDateString('pt-BR');
+      li.innerHTML = `
+        <div class="reflection-header">
+          <div class="reflection-meta">
+            <strong>${date}</strong> · ${r.ref}
+          </div>
+          <button class="btn-icon" aria-label="Favoritar">${r.favorite ? '♥' : '♡'}</button>
+        </div>
+        <p class="reflection-text">${r.text.substring(0, 100)}...</p>
+      `;
+      li.querySelector('.btn-icon').addEventListener('click', () => {
+        r.favorite = !r.favorite;
+        saveReflectionsData(reflections);
+        renderReflections(filter);
+      });
+      list.appendChild(li);
+    });
+  }
+
+  document.getElementById('reflectionFilter')?.addEventListener('change', (e) => {
+    renderReflections(e.target.value);
+  });
+
+  renderReflections();
 
   refreshStatus();
 })();
