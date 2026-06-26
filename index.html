@@ -92,13 +92,46 @@
 
   <!-- ════════ TAB 1: WISDOM ════════ -->
   <section id="tab-wisdom" class="tab-content active" role="tabpanel">
-    <!-- VOICE INPUT SECTION -->
-    <div class="wisdom-voice-section">
-      <p class="wisdom-title">Qual é sua situação?</p>
-      <p class="wisdom-subtitle">Segure o microfone e fale</p>
+    <div class="wisdom-container">
+      <!-- Title -->
+      <h2 class="wisdom-title">O Que Jesus Faria?</h2>
+      <p class="wisdom-subtitle">Compartilhe sua situação e receba sabedoria</p>
 
-      <!-- Recording State -->
-      <div class="recording-display" id="recordingDisplay" hidden>
+      <!-- Response Area (appears after send) -->
+      <div id="responseArea" hidden aria-live="polite" aria-atomic="true" role="status">
+        <div class="response-card">
+          <div class="response-header">
+            <div class="response-mark">☩</div>
+            <span class="response-title">Jesus diria a você</span>
+          </div>
+          <p class="counsel-text" id="counselText"></p>
+          <div class="verse-block">
+            <div class="verse-label">Palavra de Deus</div>
+            <p class="verse-text" id="verseText" role="doc-quote"></p>
+            <p class="verse-ref" id="verseRef"></p>
+          </div>
+          <button class="speak-btn" id="speakBtn">
+            <span class="speak-icon" aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+            </span>
+            <span class="speak-label">Ouvir em voz alta</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Loading -->
+      <div class="loading" id="loading" hidden>
+        <div class="loading-dots">
+          <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+        </div>
+        <p class="loading-text">Meditando nos ensinamentos de Cristo…</p>
+      </div>
+
+      <!-- Error -->
+      <div class="error-msg" id="errorMsg" hidden aria-live="assertive" role="alert"></div>
+
+      <!-- Recording Indicator -->
+      <div class="recording-indicator" id="recordingIndicator" hidden>
         <div class="recording-timer">
           <span class="timer-dot" aria-hidden="true"></span>
           <span id="recordingTimer">00:00</span>
@@ -110,46 +143,45 @@
           <div class="wave"></div>
           <div class="wave"></div>
         </div>
+        <p class="recording-hint">Deslize para cima para cancelar</p>
       </div>
 
-      <!-- Main Mic Button (Hold-to-Record) -->
-      <button class="mic-button-main" id="micButtonMain" type="button" aria-label="Segure para gravar">
-        <svg class="mic-icon-main" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
-          <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
-          <line x1="12" y1="19" x2="12" y2="23"/>
-          <line x1="8" y1="23" x2="16" y2="23"/>
-        </svg>
-        <span class="mic-pulse-main" aria-hidden="true"></span>
-      </button>
-
-      <!-- Cancel Hint (desliza para cima) -->
-      <p class="cancel-hint" id="cancelHint" hidden>↑ Deslize para cima para cancelar</p>
-
-      <!-- Text Alternative -->
-      <div class="text-alternative">
-        <p class="text-label">Ou prefere escrever?</p>
-        <textarea id="situation" placeholder="Digite sua situação aqui…" class="situation-textarea"></textarea>
-      </div>
-
-      <!-- Action Buttons -->
-      <div class="wisdom-actions">
-        <button class="btn btn-primary" id="askBtn" style="width: 100%;">
-          <span class="btn-icon">✨</span>
-          Buscar Sabedoria
+      <!-- Input Area (WhatsApp Style) -->
+      <div class="message-input-area">
+        <button class="msg-action-btn" id="addBtn" aria-label="Adicionar">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
         </button>
-        <button class="btn btn-clear" id="clearBtn" aria-label="Limpar">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+
+        <div class="message-input-wrapper">
+          <input
+            type="text"
+            id="situation"
+            class="message-input"
+            placeholder="Qual é sua situação?"
+            autocomplete="off"
+          />
+        </div>
+
+        <button class="msg-send-btn" id="msgSendBtn" type="button" aria-label="Enviar">
+          <!-- Mic Icon (quando vazio) -->
+          <svg class="msg-mic-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+            <line x1="12" y1="19" x2="12" y2="23"/>
+            <line x1="8" y1="23" x2="16" y2="23"/>
+          </svg>
+
+          <!-- Send Icon (quando tem texto) -->
+          <svg class="msg-send-icon" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="display: none;">
+            <path d="M16.6915026,12.4744748 L3.50612381,13.2599618 C3.19218622,13.2599618 3.03521743,13.4170592 3.03521743,13.5741566 L1.15159189,20.0151496 C0.8376543,20.8006365 0.99,21.89 1.77946707,22.52 C2.41,22.99 3.50612381,23.1 4.13399899,22.9429026 L21.714504,14.0454487 C22.6563168,13.5741566 23.1272231,12.6315722 22.9702544,11.6889879 L4.13399899,1.16346272 C3.34915502,0.9 2.40734225,1.00636533 1.77946707,1.4776575 C0.994623095,2.10604706 0.837654326,3.0486314 1.15159189,3.99 L3.03521743,10.4309931 C3.03521743,10.5880905 3.19218622,10.7451879 3.50612381,10.7451879 L16.6915026,11.5306748 C16.6915026,11.5306748 17.1624089,11.5306748 17.1624089,11.0593827 L17.1624089,12.0019671 C17.1624089,12.4744748 16.6915026,12.4744748 16.6915026,12.4744748 Z"/>
+          </svg>
         </button>
       </div>
 
-      <!-- Transcription Display -->
-      <div class="transcription" id="transcriptionDisplay" hidden>
-        <p class="transcription-label">Seu áudio:</p>
-        <p class="transcription-text" id="transcriptionText"></p>
-      </div>
-
-      <!-- Mic Hint -->
+      <!-- Mic Hint (durante gravação) -->
       <div class="mic-hint" id="micHint" hidden></div>
     </div>
 

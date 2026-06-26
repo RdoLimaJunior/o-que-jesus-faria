@@ -565,13 +565,12 @@ Responda APENAS em JSON válido (sem markdown, sem comentários):
 
   speakBtn.addEventListener('click', () => speakText(fullResponseText, speakBtn));
 
-  // ════════ HOLD-TO-RECORD (WhatsApp Style) ════════
-  const micButtonMain = document.getElementById('micButtonMain');
-  const recordingDisplay = document.getElementById('recordingDisplay');
+  // ════════ WhatsApp-STYLE MESSAGE INPUT ════════
+  const msgSendBtn = document.getElementById('msgSendBtn');
+  const msgMicIcon = document.querySelector('.msg-mic-icon');
+  const msgSendIcon = document.querySelector('.msg-send-icon');
+  const recordingIndicator = document.getElementById('recordingIndicator');
   const recordingTimer = document.getElementById('recordingTimer');
-  const cancelHint = document.getElementById('cancelHint');
-  const transcriptionDisplay = document.getElementById('transcriptionDisplay');
-  const transcriptionText = document.getElementById('transcriptionText');
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 
   let isRecording = false;
@@ -579,6 +578,22 @@ Responda APENAS em JSON válido (sem markdown, sem comentários):
   let recordingTimerInterval = null;
   let recognition = null;
   let lastYPosition = 0;
+
+  // Update button state based on input
+  function updateSendButton() {
+    const hasText = situationEl.value.trim().length > 0;
+    if (hasText) {
+      msgMicIcon.style.display = 'none';
+      msgSendIcon.style.display = 'block';
+      msgSendBtn.classList.remove('recording');
+    } else {
+      msgMicIcon.style.display = 'block';
+      msgSendIcon.style.display = 'none';
+    }
+  }
+
+  situationEl.addEventListener('input', updateSendButton);
+  updateSendButton();
 
   if (SR) {
     recognition = new SR();
@@ -589,9 +604,8 @@ Responda APENAS em JSON válido (sem markdown, sem comentários):
     recognition.onstart = () => {
       isRecording = true;
       recordingStartTime = Date.now();
-      recordingDisplay.hidden = false;
-      cancelHint.hidden = false;
-      micButtonMain.classList.add('recording');
+      recordingIndicator.hidden = false;
+      msgSendBtn.classList.add('recording');
 
       recordingTimerInterval = setInterval(() => {
         const elapsed = Math.floor((Date.now() - recordingStartTime) / 1000);
@@ -606,55 +620,76 @@ Responda APENAS em JSON válido (sem markdown, sem comentários):
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const transcript = event.results[i][0].transcript;
         if (event.results[i].isFinal) {
-          situationEl.value = transcript;
+          situationEl.value = (situationEl.value + ' ' + transcript).trim();
         } else {
           interim += transcript + ' ';
         }
       }
+      updateSendButton();
     };
 
     recognition.onend = () => {
       isRecording = false;
-      recordingDisplay.hidden = true;
-      cancelHint.hidden = true;
-      micButtonMain.classList.remove('recording');
+      recordingIndicator.hidden = true;
+      msgSendBtn.classList.remove('recording');
       clearInterval(recordingTimerInterval);
     };
 
     recognition.onerror = (event) => {
       console.error('Speech recognition error:', event.error);
       isRecording = false;
-      recordingDisplay.hidden = true;
-      cancelHint.hidden = true;
-      micButtonMain.classList.remove('recording');
+      recordingIndicator.hidden = true;
+      msgSendBtn.classList.remove('recording');
       clearInterval(recordingTimerInterval);
       toast(`❌ Erro: ${event.error}`);
     };
   }
 
-  // Mouse/Touch Events for Hold-to-Record
-  micButtonMain?.addEventListener('mousedown', (e) => {
+  // Send button click handler
+  msgSendBtn?.addEventListener('click', (e) => {
     e.preventDefault();
-    if (recognition && !isRecording) {
+    const hasText = situationEl.value.trim().length > 0;
+
+    if (isRecording) {
+      // If recording, stop and auto-send
+      recognition.stop();
+      setTimeout(() => {
+        if (situationEl.value.trim()) {
+          askJesus();
+        }
+      }, 200);
+    } else if (hasText) {
+      // Send text message
+      askJesus();
+    } else {
+      // Start recording
+      if (recognition) {
+        lastYPosition = e.clientY;
+        recognition.start();
+      }
+    }
+  });
+
+  // Mouse events for hold-to-record on mic
+  msgSendBtn?.addEventListener('mousedown', (e) => {
+    if (!situationEl.value.trim() && recognition && !isRecording) {
+      e.preventDefault();
       lastYPosition = e.clientY;
       recognition.start();
     }
   });
 
-  micButtonMain?.addEventListener('mousemove', (e) => {
+  msgSendBtn?.addEventListener('mousemove', (e) => {
     if (isRecording) {
       const moveDistance = lastYPosition - e.clientY;
-      if (moveDistance > 50) {
-        cancelHint.textContent = '↑ Solte para cancelar';
-        cancelHint.style.color = 'var(--text-soft)';
-      } else {
-        cancelHint.textContent = '↑ Deslize para cima para cancelar';
-        cancelHint.style.color = '';
+      const hint = document.querySelector('.recording-hint');
+      if (hint) {
+        hint.textContent = moveDistance > 50 ? '↑ Solte para cancelar' : '↑ Deslize para cima para cancelar';
       }
     }
   });
 
-  micButtonMain?.addEventListener('mouseup', (e) => {
+  msgSendBtn?.addEventListener('mouseup', (e) => {
     if (isRecording) {
       const moveDistance = lastYPosition - e.clientY;
       if (moveDistance > 50) {
@@ -662,54 +697,43 @@ Responda APENAS em JSON válido (sem markdown, sem comentários):
         recognition.abort();
         situationEl.value = '';
         toast('Gravação cancelada');
+        updateSendButton();
       } else {
-        // Send
+        // Auto-send
         recognition.stop();
-        setTimeout(() => {
-          if (situationEl.value.trim()) {
-            askJesus();
-          }
-        }, 200);
       }
     }
   });
 
-  // Touch events for mobile
-  micButtonMain?.addEventListener('touchstart', (e) => {
-    e.preventDefault();
-    if (recognition && !isRecording) {
+  // Touch events
+  msgSendBtn?.addEventListener('touchstart', (e) => {
+    if (!situationEl.value.trim() && recognition && !isRecording) {
+      e.preventDefault();
       lastYPosition = e.touches[0].clientY;
       recognition.start();
     }
   });
 
-  micButtonMain?.addEventListener('touchmove', (e) => {
+  msgSendBtn?.addEventListener('touchmove', (e) => {
     if (isRecording && e.touches.length > 0) {
       const moveDistance = lastYPosition - e.touches[0].clientY;
-      if (moveDistance > 50) {
-        cancelHint.textContent = '↑ Solte para cancelar';
-        cancelHint.style.color = 'var(--text-soft)';
-      } else {
-        cancelHint.textContent = '↑ Deslize para cima para cancelar';
-        cancelHint.style.color = '';
+      const hint = document.querySelector('.recording-hint');
+      if (hint) {
+        hint.textContent = moveDistance > 50 ? '↑ Solte para cancelar' : '↑ Deslize para cima para cancelar';
       }
     }
   });
 
-  micButtonMain?.addEventListener('touchend', (e) => {
+  msgSendBtn?.addEventListener('touchend', (e) => {
     if (isRecording && e.changedTouches.length > 0) {
       const moveDistance = lastYPosition - e.changedTouches[0].clientY;
       if (moveDistance > 50) {
         recognition.abort();
         situationEl.value = '';
         toast('Gravação cancelada');
+        updateSendButton();
       } else {
         recognition.stop();
-        setTimeout(() => {
-          if (situationEl.value.trim()) {
-            askJesus();
-          }
-        }, 200);
       }
     }
   });

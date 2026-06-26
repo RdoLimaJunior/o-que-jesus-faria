@@ -1062,7 +1062,228 @@ textarea::placeholder, input::placeholder { color: #b0965a; font-style: italic; 
   border-color: rgba(212,168,67,0.2);
 }
 
-/* ════════ WISDOM TAB - VOICE INPUT ════════ */
+/* ════════ WISDOM TAB - WhatsApp Style ════════ */
+.wisdom-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  padding: 16px;
+  gap: 12px;
+}
+
+.wisdom-title {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--text);
+  margin: 12px 0 0 0;
+  text-align: center;
+}
+
+.wisdom-subtitle {
+  font-size: 0.9rem;
+  color: var(--text-soft);
+  text-align: center;
+  margin: 0 0 12px 0;
+}
+
+/* Response/Loading/Error Areas */
+#responseArea,
+.loading,
+.error-msg {
+  flex: 1;
+  overflow-y: auto;
+  margin-bottom: 12px;
+}
+
+#responseArea {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+/* Recording Indicator */
+.recording-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: rgba(212,168,67,0.05);
+  border-radius: 12px;
+  margin-bottom: 12px;
+}
+
+.recording-timer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.1rem;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--gold);
+  font-weight: bold;
+}
+
+.timer-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--gold);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+.waveform {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 4px;
+  height: 32px;
+  width: 100%;
+}
+
+.wave {
+  width: 3px;
+  background: linear-gradient(to top, var(--gold), var(--gold-light));
+  border-radius: 2px;
+  animation: wave 0.6s ease-in-out infinite;
+}
+
+.wave:nth-child(1) { animation-delay: 0s; height: 4px; }
+.wave:nth-child(2) { animation-delay: 0.1s; height: 4px; }
+.wave:nth-child(3) { animation-delay: 0.2s; height: 4px; }
+.wave:nth-child(4) { animation-delay: 0.1s; height: 4px; }
+.wave:nth-child(5) { animation-delay: 0s; height: 4px; }
+
+@keyframes wave {
+  0%, 100% { height: 4px; }
+  50% { height: 24px; }
+}
+
+.recording-hint {
+  font-size: 0.85rem;
+  color: var(--text-soft);
+  margin: 0;
+}
+
+/* Message Input Area (WhatsApp Style) */
+.message-input-area {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  padding: 8px 12px;
+  background: rgba(212,168,67,0.05);
+  border: 1px solid var(--gold-line);
+  border-radius: 24px;
+  margin-top: auto;
+}
+
+.msg-action-btn,
+.msg-send-btn {
+  background: none;
+  border: none;
+  color: var(--gold);
+  cursor: pointer;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.2s ease;
+  flex-shrink: 0;
+}
+
+.msg-action-btn:hover,
+.msg-send-btn:hover {
+  opacity: 0.7;
+}
+
+.msg-action-btn:active,
+.msg-send-btn:active {
+  opacity: 0.5;
+}
+
+.message-input-wrapper {
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.message-input {
+  width: 100%;
+  background: none;
+  border: none;
+  color: var(--text);
+  padding: 8px 0;
+  font-size: 0.95rem;
+  outline: none;
+  resize: none;
+  max-height: 100px;
+  font-family: inherit;
+}
+
+.message-input::placeholder {
+  color: var(--text-soft);
+  opacity: 0.6;
+}
+
+.msg-mic-icon,
+.msg-send-icon {
+  width: 24px;
+  height: 24px;
+  transition: all 0.2s ease;
+}
+
+.msg-send-btn.recording {
+  color: #ff6b6b;
+}
+
+.msg-send-btn.recording .msg-mic-icon {
+  animation: pulse 1s ease-in-out infinite;
+}
+
+/* Dark mode adjustments */
+[data-theme="dark"] .message-input-area {
+  background: rgba(212,168,67,0.08);
+  border-color: rgba(212,168,67,0.25);
+}
+
+[data-theme="dark"] .recording-indicator {
+  background: rgba(212,168,67,0.08);
+}
+
+/* Mobile adjustments */
+@media (max-width: 560px) {
+  .wisdom-container {
+    padding: 12px;
+    height: auto;
+  }
+
+  .wisdom-title {
+    font-size: 1.2rem;
+    margin: 8px 0 0 0;
+  }
+
+  .wisdom-subtitle {
+    font-size: 0.85rem;
+    margin: 0 0 8px 0;
+  }
+
+  .message-input-area {
+    padding: 6px 8px;
+    border-radius: 20px;
+  }
+
+  .msg-action-btn,
+  .msg-send-btn {
+    padding: 6px;
+  }
+
+  .msg-mic-icon,
+  .msg-send-icon {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+/* ════════ WISDOM TAB - VOICE INPUT (OLD) ════════ */
 .wisdom-voice-section {
   display: flex;
   flex-direction: column;
