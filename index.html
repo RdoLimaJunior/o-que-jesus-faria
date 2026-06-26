@@ -70,13 +70,21 @@
     <span class="tab-icon" aria-hidden="true">✦</span>
     <span class="tab-label">Sabedoria</span>
   </button>
-  <button class="tab-btn" role="tab" data-tab="psalms" aria-selected="false">
-    <span class="tab-icon" aria-hidden="true">☩</span>
-    <span class="tab-label">Salmos</span>
+  <button class="tab-btn" role="tab" data-tab="bible" aria-selected="false">
+    <span class="tab-icon" aria-hidden="true">📖</span>
+    <span class="tab-label">Bíblia</span>
   </button>
   <button class="tab-btn" role="tab" data-tab="devotion" aria-selected="false">
     <span class="tab-icon" aria-hidden="true">☼</span>
     <span class="tab-label">Devocional</span>
+  </button>
+  <button class="tab-btn" role="tab" data-tab="habits" aria-selected="false">
+    <span class="tab-icon" aria-hidden="true">📊</span>
+    <span class="tab-label">Hábitos</span>
+  </button>
+  <button class="tab-btn" role="tab" data-tab="reflections" aria-selected="false">
+    <span class="tab-icon" aria-hidden="true">💭</span>
+    <span class="tab-label">Reflexões</span>
   </button>
 </nav>
 
@@ -152,8 +160,8 @@
     </div>
   </section>
 
-  <!-- ════════ TAB 2: PSALMS ════════ -->
-  <section id="tab-psalms" class="tab-content" role="tabpanel" hidden>
+  <!-- ════════ TAB 2: BIBLE EXPLORER ════════ -->
+  <section id="tab-bible" class="tab-content" role="tabpanel" hidden>
     <div class="card">
       <label class="label" for="psalmSelect">Escolha um Salmo para Meditar</label>
       <select id="psalmSelect">
@@ -277,6 +285,100 @@
       <div class="empty-state" id="prayerEmpty" hidden>
         <div class="empty-mark">☩</div>
         <p>Suas orações aparecerão aqui.<br><small>Toque <strong>＋</strong> para começar.</small></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════ TAB 4: HABITS ════════ -->
+  <section id="tab-habits" class="tab-content" role="tabpanel" hidden>
+    <div class="card habits-card">
+      <h2 class="card-title">Meus Hábitos Este Mês</h2>
+
+      <!-- Igreja -->
+      <div class="habit-section">
+        <div class="habit-header">
+          <span class="habit-icon">⛪</span>
+          <div>
+            <div class="habit-name">Igreja</div>
+            <div class="habit-count" id="churchCount">0 vezes este mês</div>
+          </div>
+        </div>
+        <div class="habit-actions">
+          <button class="btn btn-sm" id="checkInChurch" aria-label="Check-in na igreja hoje">Estive hoje</button>
+        </div>
+      </div>
+
+      <!-- Bíblia -->
+      <div class="habit-section">
+        <div class="habit-header">
+          <span class="habit-icon">📖</span>
+          <div>
+            <div class="habit-name">Leitura Bíblica</div>
+            <div class="habit-count" id="bibleCount">0/5 dias esta semana</div>
+          </div>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="bibleProgress"></div>
+        </div>
+        <div class="habit-actions">
+          <button class="btn btn-sm" id="checkInBible" aria-label="Marcar leitura bíblica de hoje">Li hoje</button>
+        </div>
+      </div>
+
+      <!-- Oração -->
+      <div class="habit-section">
+        <div class="habit-header">
+          <span class="habit-icon">🙏</span>
+          <div>
+            <div class="habit-name">Oração</div>
+            <div class="habit-count" id="prayerCount">0/7 dias esta semana</div>
+          </div>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="prayerProgress"></div>
+        </div>
+        <div class="habit-actions">
+          <button class="btn btn-sm" id="checkInPrayer" aria-label="Marcar oração de hoje">Orei hoje</button>
+        </div>
+      </div>
+
+      <div class="divider-soft" aria-hidden="true"></div>
+
+      <!-- Estatísticas -->
+      <div class="habits-stats">
+        <h3 class="stats-title">Sua Tendência</h3>
+        <div class="stat-row">
+          <span>Este mês:</span>
+          <strong id="monthStats">—</strong>
+        </div>
+        <div class="stat-row">
+          <span>Mês anterior:</span>
+          <strong id="prevMonthStats">—</strong>
+        </div>
+        <div class="stat-message" id="statMessage">Comece a registrar seus hábitos!</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════ TAB 5: REFLECTIONS ════════ -->
+  <section id="tab-reflections" class="tab-content" role="tabpanel" hidden>
+    <div class="card reflections-card">
+      <h2 class="card-title">Minhas Reflexões</h2>
+
+      <div class="reflections-filters">
+        <select id="reflectionFilter" class="reflection-select">
+          <option value="">Todas as reflexões</option>
+          <option value="favorite">♥ Favoritas</option>
+          <option value="week">Esta semana</option>
+          <option value="month">Este mês</option>
+        </select>
+      </div>
+
+      <ul class="reflections-list" id="reflectionsList"></ul>
+
+      <div class="empty-state" id="reflectionsEmpty" hidden>
+        <div class="empty-mark">💭</div>
+        <p>Suas reflexões aparecerão aqui.<br><small>Vá para o Devocional para começar.</small></p>
       </div>
     </div>
   </section>
