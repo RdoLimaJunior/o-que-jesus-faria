@@ -1,0 +1,82 @@
+### O QUE JESUS FARIA — BíbliaAPI Test Suite
+### Valida integração com BíbliaAPI.com.br
+
+@baseUrl = https://bibliaapi.com.br/api/v2
+@apiKey = bapi_g80fm1caiwaahtsrhvdohtbuupjg7hyommcxij7zwsd3qdhy
+@version = ACF
+
+### 1. LISTAR TODAS AS VERSÕES BÍBLICAS DISPONÍVEIS
+GET {{baseUrl}}/versions
+Authorization: Bearer {{apiKey}}
+
+### 2. LISTAR TODOS OS LIVROS DA BÍBLIA
+GET {{baseUrl}}/books
+Authorization: Bearer {{apiKey}}
+
+### 3. BUSCAR POR PALAVRA (ex: "amor")
+GET {{baseUrl}}/versions/{{version}}/search?q=amor&limit=10
+Authorization: Bearer {{apiKey}}
+
+### 4. BUSCAR VERSÍCULO ESPECÍFICO (João 3:16)
+GET {{baseUrl}}/versions/{{version}}/books/jo/chapters/3/verses/16
+Authorization: Bearer {{apiKey}}
+
+### 5. BUSCAR CAPÍTULO COMPLETO (Salmo 23)
+GET {{baseUrl}}/versions/{{version}}/books/salmos/chapters/23
+Authorization: Bearer {{apiKey}}
+
+### 6. BUSCAR VERSÍCULO ALEATÓRIO
+GET {{baseUrl}}/versions/{{version}}/random
+Authorization: Bearer {{apiKey}}
+
+### 7. BUSCAR VERSÍCULO ALEATÓRIO DE UM LIVRO ESPECÍFICO (Salmos)
+GET {{baseUrl}}/versions/{{version}}/books/salmos/random
+Authorization: Bearer {{apiKey}}
+
+### 8. BUSCAR RANGE DE VERSÍCULOS (Mateus 5:1-10)
+GET {{baseUrl}}/versions/{{version}}/books/mt/chapters/5/verses/1
+Authorization: Bearer {{apiKey}}
+
+### 9. TESTE COM TRADUÇÃO DIFERENTE (ARA - Almeida Revista)
+GET {{baseUrl}}/versions/ARA/books/salmos/chapters/23
+Authorization: Bearer {{apiKey}}
+
+### 10. TESTE COM TRADUÇÃO NVI (Nova Versão Internacional)
+GET {{baseUrl}}/versions/NVI/books/jo/chapters/3/verses/16
+Authorization: Bearer {{apiKey}}
+
+### DOCUMENTAÇÃO DE SUCESSO:
+###
+### Status 200 OK esperado em TODOS os endpoints
+###
+### Estrutura de resposta esperada:
+### {
+###   "data": {
+###     "reference": "Salmos 23",
+###     "version": "ACF",
+###     "book": { "id": 19, "name": "Salmos", "abbrev": "sl", "testament": "VT" },
+###     "chapter": 23,
+###     "verses": [ { "number": 1, "text": "O SENHOR é o meu pastor..." } ],
+###     "text": "[texto completo concatenado]",
+###     "translation": { "id": "acf", "name": "Almeida Corrigida e Fiel" }
+###   }
+### }
+###
+### IMPLEMENTAÇÃO NO APP:
+### ✅ /api/verse        → Busca versículo específico
+### ✅ /api/search       → Busca por palavra
+### ✅ /api/random       → Versículo aleatório
+### ✅ /api/books        → Lista livros
+### ✅ /api/psalms       → Capítulo completo
+### ✅ /api/devotion     → Versículo do dia
+###
+### CACHE STRATEGY:
+### - IndexedDB: Armazena salmos já lidos
+### - localStorage: Reflexões e preferências
+### - Browser Cache: HTTP 304 para responses recentes
+### - Limite: 10.000 req/mês (monitorar dashboard)
+###
+### OFFLINE MODE:
+### - Sim, funciona offline com dados em cache
+### - Novo versículo aleatório? Precisa internet
+### - Busca em cache local? Funciona offline
