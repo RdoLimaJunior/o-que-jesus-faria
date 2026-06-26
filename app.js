@@ -1213,5 +1213,95 @@ Responda APENAS em JSON válido (sem markdown, sem comentários):
 
   renderReflections();
 
+  // ════════ CHALLENGE: 30 DAYS ════════
+  const CHALLENGE_KEY = 'challenge_30days';
+
+  function getChallengeData() {
+    try { return JSON.parse(localStorage.getItem(CHALLENGE_KEY) || '{}'); } catch (e) { return {}; }
+  }
+
+  function saveChallengeData(data) {
+    localStorage.setItem(CHALLENGE_KEY, JSON.stringify(data));
+  }
+
+  function updateChallengeDisplay() {
+    const data = getChallengeData();
+    if (!data.startDate) {
+      document.getElementById('startChallengeBtn').hidden = false;
+      document.getElementById('resetChallengeBtn').hidden = true;
+      return;
+    }
+
+    document.getElementById('startChallengeBtn').hidden = true;
+    document.getElementById('resetChallengeBtn').hidden = false;
+
+    const startDate = new Date(data.startDate);
+    const today = new Date();
+    const daysPassed = Math.floor((today - startDate) / (1000 * 60 * 60 * 24)) + 1;
+    const currentDay = Math.min(daysPassed, 30);
+    const isComplete = daysPassed >= 30 && data.days?.filter(d => d).length === 30;
+
+    document.getElementById('challengeDay').textContent = isComplete ? '✦ 30' : currentDay;
+    document.getElementById('challengeProgress').textContent = `${Math.round((currentDay / 30) * 100)}%`;
+    document.getElementById('challengeProgressBar').style.width = `${(currentDay / 30) * 100}%`;
+
+    const daysContainer = document.getElementById('challengeDays');
+    if (daysContainer) {
+      daysContainer.innerHTML = '';
+      for (let i = 0; i < 30; i++) {
+        const dayEl = document.createElement('div');
+        dayEl.className = 'challenge-day';
+        const d = new Date(startDate);
+        d.setDate(d.getDate() + i);
+        const dayKey = d.toISOString().split('T')[0];
+        const isDone = data.days?.[i];
+
+        dayEl.textContent = (i + 1);
+        dayEl.classList.toggle('done', isDone);
+        dayEl.classList.toggle('today', dayKey === getTodayKey());
+        dayEl.title = d.toLocaleDateString('pt-BR');
+        daysContainer.appendChild(dayEl);
+      }
+    }
+  }
+
+  document.getElementById('startChallengeBtn')?.addEventListener('click', () => {
+    const data = getChallengeData();
+    if (data.startDate) return;
+
+    data.startDate = new Date().toISOString();
+    data.days = new Array(30).fill(false);
+    saveChallengeData(data);
+    updateChallengeDisplay();
+    toast('🎯 Desafio 30 Dias começou! Leia a Bíblia todos os dias.');
+  });
+
+  document.getElementById('resetChallengeBtn')?.addEventListener('click', () => {
+    if (confirm('Tem certeza? Seu progresso será perdido.')) {
+      localStorage.removeItem(CHALLENGE_KEY);
+      updateChallengeDisplay();
+      toast('Desafio resetado');
+    }
+  });
+
+  // Mark day as complete when user checks in Bible
+  const origCheckInBible = document.getElementById('checkInBible')?.onclick;
+  document.getElementById('checkInBible')?.addEventListener('click', () => {
+    const data = getChallengeData();
+    if (data.startDate) {
+      const today = getTodayKey();
+      const startDate = new Date(data.startDate);
+      const daysPassed = Math.floor((new Date(today) - startDate) / (1000 * 60 * 60 * 24));
+
+      if (daysPassed >= 0 && daysPassed < 30) {
+        data.days[daysPassed] = true;
+        saveChallengeData(data);
+        updateChallengeDisplay();
+      }
+    }
+  });
+
+  updateChallengeDisplay();
+
   refreshStatus();
 })();

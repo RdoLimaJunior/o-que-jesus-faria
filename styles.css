@@ -1183,6 +1183,103 @@ textarea::placeholder, input::placeholder { color: #b0965a; font-style: italic; 
   color: var(--text);
 }
 
+/* Challenge 30 Days */
+.challenge-section {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--gold-line);
+}
+
+.challenge-title {
+  font-size: 1.2rem;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+
+.challenge-subtitle {
+  font-size: 0.9rem;
+  color: var(--text-soft);
+  margin-bottom: 16px;
+}
+
+.challenge-header {
+  margin-bottom: 16px;
+}
+
+.challenge-stats {
+  display: flex;
+  gap: 24px;
+}
+
+.stat-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.stat-value {
+  font-size: 2rem;
+  font-weight: bold;
+  color: var(--gold);
+  font-family: 'EB Garamond', Georgia, serif;
+}
+
+.stat-label {
+  font-size: 0.8rem;
+  color: var(--text-soft);
+}
+
+.challenge-progress {
+  margin: 16px 0;
+}
+
+.challenge-days {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 8px;
+  margin: 20px 0;
+}
+
+.challenge-day {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(212,168,67,0.1);
+  border: 2px solid var(--gold-line);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: bold;
+  color: var(--text-soft);
+  cursor: default;
+  transition: all .2s ease;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.challenge-day.done {
+  background: var(--gold-soft);
+  border-color: var(--gold);
+  color: var(--dark);
+}
+
+.challenge-day.today {
+  border-color: var(--gold);
+  box-shadow: 0 0 12px rgba(212,168,67,0.4);
+}
+
+.challenge-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.btn-secondary {
+  background: rgba(138,106,47,0.15);
+  border: 1px solid var(--gold-line);
+}
+
 .field__input-wrap {
   position: relative;
 }
