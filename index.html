@@ -92,41 +92,65 @@
 
   <!-- ════════ TAB 1: WISDOM ════════ -->
   <section id="tab-wisdom" class="tab-content active" role="tabpanel">
-    <div class="step-indicator" id="wisdomSteps">
-      <div class="step active" data-step="1">
-        <span class="step-number">1</span>
-        <span class="step-label">Compartilhe</span>
-      </div>
-      <div class="step" data-step="2">
-        <span class="step-number">2</span>
-        <span class="step-label">Receba</span>
-      </div>
-    </div>
+    <!-- VOICE INPUT SECTION -->
+    <div class="wisdom-voice-section">
+      <p class="wisdom-title">Qual é sua situação?</p>
+      <p class="wisdom-subtitle">Segure o microfone e fale</p>
 
-    <div class="card">
-      <label class="label" for="situation">Conte sua situação ou dúvida</label>
-      <div class="textarea-wrap">
-        <textarea id="situation" placeholder="Escreva aqui o que está passando no seu coração…"></textarea>
-        <button class="mic-btn" id="micBtn" type="button" aria-label="Falar em vez de digitar" title="Ditar por voz">
-          <svg class="mic-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
-            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
-            <line x1="12" y1="19" x2="12" y2="23"/>
-            <line x1="8" y1="23" x2="16" y2="23"/>
-          </svg>
-          <span class="mic-pulse" aria-hidden="true"></span>
-        </button>
+      <!-- Recording State -->
+      <div class="recording-display" id="recordingDisplay" hidden>
+        <div class="recording-timer">
+          <span class="timer-dot" aria-hidden="true"></span>
+          <span id="recordingTimer">00:00</span>
+        </div>
+        <div class="waveform" aria-hidden="true">
+          <div class="wave"></div>
+          <div class="wave"></div>
+          <div class="wave"></div>
+          <div class="wave"></div>
+          <div class="wave"></div>
+        </div>
       </div>
-      <div class="mic-hint" id="micHint" hidden></div>
-      <div class="btn-row">
-        <button class="btn btn-primary" id="askBtn">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+
+      <!-- Main Mic Button (Hold-to-Record) -->
+      <button class="mic-button-main" id="micButtonMain" type="button" aria-label="Segure para gravar">
+        <svg class="mic-icon-main" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+          <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+          <line x1="12" y1="19" x2="12" y2="23"/>
+          <line x1="8" y1="23" x2="16" y2="23"/>
+        </svg>
+        <span class="mic-pulse-main" aria-hidden="true"></span>
+      </button>
+
+      <!-- Cancel Hint (desliza para cima) -->
+      <p class="cancel-hint" id="cancelHint" hidden>↑ Deslize para cima para cancelar</p>
+
+      <!-- Text Alternative -->
+      <div class="text-alternative">
+        <p class="text-label">Ou prefere escrever?</p>
+        <textarea id="situation" placeholder="Digite sua situação aqui…" class="situation-textarea"></textarea>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="wisdom-actions">
+        <button class="btn btn-primary" id="askBtn" style="width: 100%;">
+          <span class="btn-icon">✨</span>
           Buscar Sabedoria
         </button>
-        <button class="btn btn-clear" id="clearBtn" title="Limpar" aria-label="Limpar">
+        <button class="btn btn-clear" id="clearBtn" aria-label="Limpar">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
         </button>
       </div>
+
+      <!-- Transcription Display -->
+      <div class="transcription" id="transcriptionDisplay" hidden>
+        <p class="transcription-label">Seu áudio:</p>
+        <p class="transcription-text" id="transcriptionText"></p>
+      </div>
+
+      <!-- Mic Hint -->
+      <div class="mic-hint" id="micHint" hidden></div>
     </div>
 
     <div class="loading" id="loading" hidden>

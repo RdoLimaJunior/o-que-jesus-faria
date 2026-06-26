@@ -565,10 +565,158 @@ Responda APENAS em JSON válido (sem markdown, sem comentários):
 
   speakBtn.addEventListener('click', () => speakText(fullResponseText, speakBtn));
 
-  // ════════ MIC INPUT (Speech-to-Text) ════════
+  // ════════ HOLD-TO-RECORD (WhatsApp Style) ════════
+  const micButtonMain = document.getElementById('micButtonMain');
+  const recordingDisplay = document.getElementById('recordingDisplay');
+  const recordingTimer = document.getElementById('recordingTimer');
+  const cancelHint = document.getElementById('cancelHint');
+  const transcriptionDisplay = document.getElementById('transcriptionDisplay');
+  const transcriptionText = document.getElementById('transcriptionText');
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+  let isRecording = false;
+  let recordingStartTime = null;
+  let recordingTimerInterval = null;
+  let recognition = null;
+  let lastYPosition = 0;
+
+  if (SR) {
+    recognition = new SR();
+    recognition.lang = 'pt-BR';
+    recognition.continuous = false;
+    recognition.interimResults = true;
+
+    recognition.onstart = () => {
+      isRecording = true;
+      recordingStartTime = Date.now();
+      recordingDisplay.hidden = false;
+      cancelHint.hidden = false;
+      micButtonMain.classList.add('recording');
+
+      recordingTimerInterval = setInterval(() => {
+        const elapsed = Math.floor((Date.now() - recordingStartTime) / 1000);
+        const mins = Math.floor(elapsed / 60);
+        const secs = elapsed % 60;
+        recordingTimer.textContent = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+      }, 100);
+    };
+
+    recognition.onresult = (event) => {
+      let interim = '';
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const transcript = event.results[i][0].transcript;
+        if (event.results[i].isFinal) {
+          situationEl.value = transcript;
+        } else {
+          interim += transcript + ' ';
+        }
+      }
+    };
+
+    recognition.onend = () => {
+      isRecording = false;
+      recordingDisplay.hidden = true;
+      cancelHint.hidden = true;
+      micButtonMain.classList.remove('recording');
+      clearInterval(recordingTimerInterval);
+    };
+
+    recognition.onerror = (event) => {
+      console.error('Speech recognition error:', event.error);
+      isRecording = false;
+      recordingDisplay.hidden = true;
+      cancelHint.hidden = true;
+      micButtonMain.classList.remove('recording');
+      clearInterval(recordingTimerInterval);
+      toast(`❌ Erro: ${event.error}`);
+    };
+  }
+
+  // Mouse/Touch Events for Hold-to-Record
+  micButtonMain?.addEventListener('mousedown', (e) => {
+    e.preventDefault();
+    if (recognition && !isRecording) {
+      lastYPosition = e.clientY;
+      recognition.start();
+    }
+  });
+
+  micButtonMain?.addEventListener('mousemove', (e) => {
+    if (isRecording) {
+      const moveDistance = lastYPosition - e.clientY;
+      if (moveDistance > 50) {
+        cancelHint.textContent = '↑ Solte para cancelar';
+        cancelHint.style.color = 'var(--text-soft)';
+      } else {
+        cancelHint.textContent = '↑ Deslize para cima para cancelar';
+        cancelHint.style.color = '';
+      }
+    }
+  });
+
+  micButtonMain?.addEventListener('mouseup', (e) => {
+    if (isRecording) {
+      const moveDistance = lastYPosition - e.clientY;
+      if (moveDistance > 50) {
+        // Cancel
+        recognition.abort();
+        situationEl.value = '';
+        toast('Gravação cancelada');
+      } else {
+        // Send
+        recognition.stop();
+        setTimeout(() => {
+          if (situationEl.value.trim()) {
+            askJesus();
+          }
+        }, 200);
+      }
+    }
+  });
+
+  // Touch events for mobile
+  micButtonMain?.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    if (recognition && !isRecording) {
+      lastYPosition = e.touches[0].clientY;
+      recognition.start();
+    }
+  });
+
+  micButtonMain?.addEventListener('touchmove', (e) => {
+    if (isRecording && e.touches.length > 0) {
+      const moveDistance = lastYPosition - e.touches[0].clientY;
+      if (moveDistance > 50) {
+        cancelHint.textContent = '↑ Solte para cancelar';
+        cancelHint.style.color = 'var(--text-soft)';
+      } else {
+        cancelHint.textContent = '↑ Deslize para cima para cancelar';
+        cancelHint.style.color = '';
+      }
+    }
+  });
+
+  micButtonMain?.addEventListener('touchend', (e) => {
+    if (isRecording && e.changedTouches.length > 0) {
+      const moveDistance = lastYPosition - e.changedTouches[0].clientY;
+      if (moveDistance > 50) {
+        recognition.abort();
+        situationEl.value = '';
+        toast('Gravação cancelada');
+      } else {
+        recognition.stop();
+        setTimeout(() => {
+          if (situationEl.value.trim()) {
+            askJesus();
+          }
+        }, 200);
+      }
+    }
+  });
+
+  // ════════ MIC INPUT (Speech-to-Text) - OLD ════════
   const micBtn = document.getElementById('micBtn');
   const micHint = document.getElementById('micHint');
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 
   let recognition = null;
   let recognizing = false;
