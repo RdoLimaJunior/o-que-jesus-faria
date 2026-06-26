@@ -82,6 +82,29 @@
   function closeSettings() {
     settingsModal.hidden = true;
   }
+
+  // Dark Mode Toggle
+  const darkModeToggle = document.getElementById('darkModeToggle');
+  function initDarkMode() {
+    const isDark = localStorage.getItem('darkMode') === '1';
+    if (isDark) {
+      document.documentElement.setAttribute('data-theme', 'dark');
+      darkModeToggle.checked = true;
+    }
+  }
+  initDarkMode();
+
+  darkModeToggle?.addEventListener('change', (e) => {
+    const isDark = e.target.checked;
+    if (isDark) {
+      document.documentElement.setAttribute('data-theme', 'dark');
+      localStorage.setItem('darkMode', '1');
+    } else {
+      document.documentElement.removeAttribute('data-theme');
+      localStorage.setItem('darkMode', '0');
+    }
+  });
+
   document.getElementById('openSettings').addEventListener('click', openSettings);
   settingsModal.addEventListener('click', (e) => {
     if (e.target.dataset.close !== undefined) closeSettings();
