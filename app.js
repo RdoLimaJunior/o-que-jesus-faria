@@ -600,23 +600,17 @@ Responda APENAS em JSON válido (sem markdown, sem comentários):
   }
 
 
-  // Load psalm text from BíbliaAPI (Gratuito & Otimizado para PT-BR)
+  // Load psalm text from BíbliaAPI.com.br (Gratuito & Otimizado para PT-BR)
   async function getPsalmText(psalmNumber) {
-    // 1. Verificar cache local (IndexedDB)
+    // 1. Verificar cache local (IndexedDB) - rápido & offline
     const cached = await getPsalmFromDB(psalmNumber);
     if (cached && cached.texto) {
       return cached.texto;
     }
 
-    // 2. Verificar se já tem no banco de dados local
-    const psalm = psalmsDb[psalmNumber];
-    if (psalm && psalm.text) {
-      return psalm.text;
-    }
-
     try {
-      // 3. Buscar de /api/psalms (Vercel Function proxy para evitar CORS)
-      const res = await fetch(`/api/psalms?number=${psalmNumber}`);
+      // 2. Buscar de /api/psalms (Vercel Function proxy para BíbliaAPI.com.br)
+      const res = await fetch(`/api/psalms?number=${psalmNumber}&version=ACF`);
 
       if (!res.ok) {
         return `[Salmo ${psalmNumber} - Texto não disponível.]`;
@@ -629,18 +623,24 @@ Responda APENAS em JSON válido (sem markdown, sem comentários):
         return `[Salmo ${psalmNumber} - Texto vazio.]`;
       }
 
-      // 4. Cachear para uso offline
+      // 3. Cachear em IndexedDB para uso offline
       await savePsalmToDB({
         numero: psalmNumber,
         titulo: `Salmo ${psalmNumber}`,
         texto: texto,
         tipo: 'Salmo',
         autor: 'Davi (maioria)',
-        referencia: data.reference || `Salmos ${psalmNumber}`
+        referencia: data.reference || `Salmos ${psalmNumber}`,
+        versao: data.version || 'ACF'
       });
 
       return texto;
     } catch (err) {
+      // Se falhar e tiver em cache: usar cache mesmo que antigo
+      const fallback = await getPsalmFromDB(psalmNumber);
+      if (fallback && fallback.texto) {
+        return fallback.texto + '\n\n[⚠️ Usando versão em cache - sem conexão]';
+      }
       return `[Salmo ${psalmNumber} - Erro ao carregar.]`;
     }
   }

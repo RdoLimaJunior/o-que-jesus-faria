@@ -1,16 +1,26 @@
-// Vercel Function to proxy BíbliaAPI (avoids CORS issues)
+// Vercel Function to proxy BíbliaAPI.com.br (avoids CORS issues)
 
 module.exports = async (req, res) => {
-  const { number } = req.query;
+  const { number, version = 'ACF' } = req.query;
 
   if (!number) {
     return res.status(400).json({ error: 'Psalm number required' });
   }
 
   try {
-    // Call BíbliaAPI from backend (no CORS issues)
+    const apiKey = process.env.BIBLIAAPI_KEY;
+    if (!apiKey) {
+      return res.status(500).json({ error: 'BIBLIAAPI_KEY not configured' });
+    }
+
+    // Call BíbliaAPI.com.br from backend (no CORS issues)
     const response = await fetch(
-      `https://bible-api.com/Salmos+${number}?translation=jfa`
+      `https://bibliaapi.com.br/api/v2/versions/${version}/books/salmos/chapters/${number}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${apiKey}`
+        }
+      }
     );
 
     if (!response.ok) {
@@ -21,11 +31,21 @@ module.exports = async (req, res) => {
 
     const data = await response.json();
 
-    // Return with CORS headers already set by Vercel
+    if (!data.data) {
+      return res.status(404).json({ error: 'Psalm not found' });
+    }
+
+    const psalmsData = data.data;
+    const textArray = psalmsData.verses.map(v => v.text);
+    const fullText = textArray.join('\n\n');
+
+    // Return formatted response
     return res.json({
-      text: data.text,
-      reference: data.reference,
-      translation: data.translation
+      reference: psalmsData.reference,
+      text: fullText,
+      verses: psalmsData.verses,
+      version: psalmsData.version,
+      translation: `Bíblia ${psalmsData.version}`
     });
 
   } catch (error) {
