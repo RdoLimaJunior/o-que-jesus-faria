@@ -1066,9 +1066,16 @@ textarea::placeholder, input::placeholder { color: #b0965a; font-style: italic; 
 .wisdom-simple {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: 100dvh;
   padding: 0;
   gap: 0;
+  max-height: 100vh;
+}
+
+@supports not (height: 100dvh) {
+  .wisdom-simple {
+    height: 100vh;
+  }
 }
 
 /* Input Bar (TOP) */

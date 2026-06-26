@@ -357,8 +357,6 @@
 
   // ════════ WISDOM TAB (Claude) ════════
   const situationEl = document.getElementById('situation');
-  const askBtn = document.getElementById('askBtn');
-  const clearBtn = document.getElementById('clearBtn');
   const loadingEl = document.getElementById('loading');
   const errorMsgEl = document.getElementById('errorMsg');
   const responseArea = document.getElementById('responseArea');
@@ -380,10 +378,6 @@
     loadingEl.hidden = !show;
     if (show) {
       const textEl = loadingEl.querySelector('.loading-text');
-      askBtn.disabled = true;
-      askBtn.style.opacity = '0.6';
-      const btnLabel = askBtn.querySelector('span:last-child');
-      if (btnLabel) btnLabel.textContent = 'Buscando…';
       let i = 0;
       loadingTimer = setInterval(() => {
         i = (i + 1) % loadingMsgs.length;
@@ -391,26 +385,8 @@
       }, 2200);
     } else {
       clearInterval(loadingTimer);
-      askBtn.disabled = false;
-      askBtn.style.opacity = '1';
-      const btnLabel = askBtn.querySelector('span:last-child');
-      if (btnLabel) btnLabel.textContent = 'Buscar Sabedoria';
     }
   }
-
-  function clearWisdom() {
-    situationEl.value = '';
-    responseArea.hidden = true;
-    errorMsgEl.hidden = true;
-    fullResponseText = '';
-    stopAll();
-    situationEl.focus();
-    // Reset step indicator
-    const steps = document.querySelectorAll('#wisdomSteps .step');
-    steps[0].classList.add('active');
-    steps[1].classList.remove('active');
-  }
-  clearBtn.addEventListener('click', clearWisdom);
 
   async function callGroqAPI(situation, systemPrompt) {
     const apiKey = window.API_CONFIG?.GROQ_API_KEY;
@@ -473,7 +449,6 @@
     responseArea.hidden = true;
     errorMsgEl.hidden = true;
     showLoading(true);
-    askBtn.disabled = true;
 
     try {
       const systemPrompt = `Você é uma voz amorosa e sábia que reflete os ensinamentos de Jesus Cristo no Evangelho.
@@ -553,10 +528,8 @@ Responda APENAS em JSON válido (sem markdown, sem comentários):
       errorMsgEl.hidden = false;
     } finally {
       showLoading(false);
-      askBtn.disabled = false;
     }
   }
-  askBtn.addEventListener('click', askJesus);
   situationEl.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && !e.shiftKey && (e.metaKey || e.ctrlKey)) {
       e.preventDefault(); askJesus();
@@ -696,90 +669,6 @@ Responda APENAS em JSON válido (sem markdown, sem comentários):
       }
     }
   });
-
-  // ════════ MIC INPUT (Speech-to-Text) - OLD ════════
-  const micBtn = document.getElementById('micBtn');
-  const micHint = document.getElementById('micHint');
-
-  let recognition = null;
-  let recognizing = false;
-  let baseTranscript = '';
-
-  function setMicHint(msg, isError) {
-    if (!msg) { micHint.hidden = true; micHint.textContent = ''; return; }
-    micHint.hidden = false;
-    micHint.textContent = msg;
-    micHint.classList.toggle('error', !!isError);
-  }
-
-  if (!SR) {
-    micBtn.addEventListener('click', () => {
-      setMicHint('Seu navegador não suporta entrada por voz. Tente Chrome ou Edge.', true);
-    });
-  } else {
-    recognition = new SR();
-    recognition.lang = 'pt-BR';
-    recognition.continuous = true;
-    recognition.interimResults = true;
-
-    recognition.onstart = () => {
-      recognizing = true;
-      micBtn.classList.add('recording');
-      micBtn.setAttribute('aria-label', 'Parar gravação');
-      baseTranscript = situationEl.value ? situationEl.value.trim() + ' ' : '';
-      setMicHint('🎙️ Ouvindo… fale agora');
-    };
-
-    recognition.onresult = (event) => {
-      let interim = '';
-      let finalText = '';
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        const r = event.results[i];
-        if (r.isFinal) finalText += r[0].transcript + ' ';
-        else interim += r[0].transcript;
-      }
-      if (finalText) {
-        baseTranscript = (baseTranscript + finalText).replace(/\s+/g, ' ');
-      }
-      situationEl.value = (baseTranscript + interim).trim();
-    };
-
-    recognition.onerror = (e) => {
-      let msg = 'Erro no reconhecimento. Tente novamente.';
-      if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
-        msg = 'Permita o microfone nas configurações do navegador.';
-      } else if (e.error === 'no-speech') {
-        msg = 'Não ouvi nada. Toque novamente para falar.';
-      } else if (e.error === 'audio-capture') {
-        msg = 'Microfone não encontrado.';
-      }
-      setMicHint(msg, true);
-    };
-
-    recognition.onend = () => {
-      recognizing = false;
-      micBtn.classList.remove('recording');
-      micBtn.setAttribute('aria-label', 'Falar em vez de digitar');
-      setTimeout(() => {
-        if (!recognizing) setMicHint('');
-      }, 2500);
-    };
-
-    micBtn.addEventListener('click', () => {
-      if (recognizing) {
-        try { recognition.stop(); } catch (e) {}
-        return;
-      }
-      // stop any TTS playback so it doesn't get captured
-      stopAll();
-      try {
-        recognition.start();
-      } catch (e) {
-        try { recognition.stop(); } catch (e2) {}
-        setTimeout(() => { try { recognition.start(); } catch (e3) {} }, 200);
-      }
-    });
-  }
 
   // ════════ PSALMS ════════
   let psalmsDb = {};
