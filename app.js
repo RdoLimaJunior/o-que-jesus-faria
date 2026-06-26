@@ -1303,5 +1303,218 @@ Responda APENAS em JSON válido (sem markdown, sem comentários):
 
   updateChallengeDisplay();
 
+  // ════════ PRAYER GROUPS ════════
+  const GROUPS_KEY = 'prayer_groups';
+  const CURRENT_GROUP_KEY = 'current_group';
+
+  function getGroups() {
+    try { return JSON.parse(localStorage.getItem(GROUPS_KEY) || '{}'); } catch (e) { return {}; }
+  }
+
+  function saveGroups(groups) {
+    localStorage.setItem(GROUPS_KEY, JSON.stringify(groups));
+  }
+
+  function getCurrentGroup() {
+    return localStorage.getItem(CURRENT_GROUP_KEY);
+  }
+
+  function generateGroupCode() {
+    return Math.random().toString(36).substring(2, 8).toUpperCase();
+  }
+
+  function updateGroupUI() {
+    const groupCode = getCurrentGroup();
+    const groups = getGroups();
+    const groupSection = document.getElementById('groupSection');
+    const currentGroupDiv = document.getElementById('currentGroup');
+    const sharedSection = document.getElementById('sharedReflectionsSection');
+    const shareSection = document.getElementById('shareSection');
+
+    if (groupCode && groups[groupCode]) {
+      const group = groups[groupCode];
+      const nameDisplay = document.getElementById('groupNameDisplay');
+      const codeDisplay = document.getElementById('groupCodeDisplay');
+      const membersCount = document.getElementById('groupMembersCount');
+
+      if (nameDisplay) nameDisplay.textContent = group.name;
+      if (codeDisplay) codeDisplay.textContent = `Código: ${groupCode}`;
+      if (membersCount) membersCount.textContent = `Membros: ${group.members?.length || 1}`;
+
+      if (currentGroupDiv) currentGroupDiv.hidden = false;
+      if (sharedSection) sharedSection.hidden = false;
+      if (shareSection) shareSection.hidden = false;
+
+      renderSharedReflections(groupCode);
+      updateReflectionsToShare();
+    } else {
+      if (currentGroupDiv) currentGroupDiv.hidden = true;
+      if (sharedSection) sharedSection.hidden = true;
+      if (shareSection) shareSection.hidden = true;
+    }
+  }
+
+  function renderSharedReflections(groupCode) {
+    const groups = getGroups();
+    const group = groups[groupCode];
+    const list = document.getElementById('sharedReflectionsList');
+    const empty = document.getElementById('sharedReflectionsEmpty');
+
+    if (!list) return;
+
+    list.innerHTML = '';
+    const reflections = group.sharedReflections || [];
+
+    if (reflections.length === 0) {
+      if (empty) empty.hidden = false;
+      return;
+    }
+
+    if (empty) empty.hidden = true;
+    reflections.forEach(r => {
+      const li = document.createElement('li');
+      li.className = 'shared-reflection-item';
+      const date = new Date(r.ts).toLocaleDateString('pt-BR');
+      li.innerHTML = `
+        <div class="shared-reflection-meta">${date} · ${r.ref}</div>
+        <p class="shared-reflection-text">${r.text}</p>
+      `;
+      list.appendChild(li);
+    });
+  }
+
+  function updateReflectionsToShare() {
+    const select = document.getElementById('reflectionsToShare');
+    if (!select) return;
+
+    const reflections = getReflectionsData();
+    select.innerHTML = '<option value="">— Escolha uma reflexão —</option>';
+    reflections.forEach((r, idx) => {
+      const date = new Date(r.ts).toLocaleDateString('pt-BR');
+      const opt = document.createElement('option');
+      opt.value = idx;
+      opt.textContent = `${date}: ${r.text.substring(0, 40)}...`;
+      select.appendChild(opt);
+    });
+  }
+
+  document.getElementById('createGroupBtn')?.addEventListener('click', () => {
+    const form = document.getElementById('createGroupForm');
+    const joinForm = document.getElementById('joinGroupForm');
+    if (form) form.hidden = false;
+    if (joinForm) joinForm.hidden = true;
+  });
+
+  document.getElementById('joinGroupBtn')?.addEventListener('click', () => {
+    const form = document.getElementById('joinGroupForm');
+    const createForm = document.getElementById('createGroupForm');
+    if (form) form.hidden = false;
+    if (createForm) createForm.hidden = true;
+  });
+
+  document.getElementById('cancelCreateGroup')?.addEventListener('click', () => {
+    const form = document.getElementById('createGroupForm');
+    if (form) form.hidden = true;
+  });
+
+  document.getElementById('cancelJoinGroup')?.addEventListener('click', () => {
+    const form = document.getElementById('joinGroupForm');
+    if (form) form.hidden = true;
+  });
+
+  document.getElementById('createGroupForm')?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const nameInput = document.getElementById('groupNameInput');
+    const descInput = document.getElementById('groupDescInput');
+    const name = nameInput.value.trim();
+    const desc = descInput.value.trim();
+
+    if (!name) return;
+
+    const code = generateGroupCode();
+    const groups = getGroups();
+    groups[code] = {
+      name, desc, code,
+      createdAt: new Date().toISOString(),
+      members: [{ id: 'me', joined: new Date().toISOString() }],
+      sharedReflections: []
+    };
+
+    saveGroups(groups);
+    localStorage.setItem(CURRENT_GROUP_KEY, code);
+
+    const form = document.getElementById('createGroupForm');
+    if (form) form.hidden = true;
+    if (nameInput) nameInput.value = '';
+    if (descInput) descInput.value = '';
+
+    updateGroupUI();
+    toast(`✦ Grupo "${name}" criado! Código: ${code}`);
+  });
+
+  document.getElementById('joinGroupForm')?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const codeInput = document.getElementById('groupCodeInput');
+    const code = codeInput.value.trim().toUpperCase();
+
+    if (!code) return;
+
+    const groups = getGroups();
+    if (!groups[code]) {
+      toast('❌ Código de grupo inválido');
+      return;
+    }
+
+    groups[code].members.push({ id: 'member-' + Date.now(), joined: new Date().toISOString() });
+    saveGroups(groups);
+    localStorage.setItem(CURRENT_GROUP_KEY, code);
+
+    const form = document.getElementById('joinGroupForm');
+    if (form) form.hidden = true;
+    if (codeInput) codeInput.value = '';
+
+    updateGroupUI();
+    toast(`✦ Você entrou em "${groups[code].name}"`);
+  });
+
+  document.getElementById('leaveGroupBtn')?.addEventListener('click', () => {
+    if (confirm('Tem certeza que quer sair do grupo?')) {
+      localStorage.removeItem(CURRENT_GROUP_KEY);
+      updateGroupUI();
+      toast('Você saiu do grupo');
+    }
+  });
+
+  document.getElementById('shareReflectionBtn')?.addEventListener('click', () => {
+    const select = document.getElementById('reflectionsToShare');
+    const idx = select.value;
+
+    if (!idx) {
+      toast('Escolha uma reflexão para compartilhar');
+      return;
+    }
+
+    const reflections = getReflectionsData();
+    const reflection = reflections[idx];
+    const groupCode = getCurrentGroup();
+    const groups = getGroups();
+    const group = groups[groupCode];
+
+    if (!group) return;
+
+    group.sharedReflections = group.sharedReflections || [];
+    group.sharedReflections.unshift({
+      ref: reflection.ref,
+      text: reflection.text,
+      ts: Date.now()
+    });
+
+    saveGroups(groups);
+    renderSharedReflections(groupCode);
+    toast('✦ Reflexão compartilhada com o grupo (anonimamente)');
+  });
+
+  updateGroupUI();
+
   refreshStatus();
 })();

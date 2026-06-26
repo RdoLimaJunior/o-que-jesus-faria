@@ -405,6 +405,66 @@
 
   <!-- ════════ TAB 5: REFLECTIONS ════════ -->
   <section id="tab-reflections" class="tab-content" role="tabpanel" hidden>
+    <div class="card prayer-groups-card">
+      <h2 class="card-title">Grupos de Oração</h2>
+
+      <div class="group-section" id="groupSection">
+        <p class="group-intro">Crie um grupo de oração ou entre em um existente para compartilhar reflexões com sua comunidade.</p>
+
+        <div class="group-actions">
+          <button class="btn btn-primary btn-sm" id="createGroupBtn">Criar Grupo</button>
+          <button class="btn btn-secondary btn-sm" id="joinGroupBtn">Entrar em Grupo</button>
+        </div>
+
+        <!-- Create Group Form -->
+        <form class="group-form" id="createGroupForm" hidden>
+          <input type="text" id="groupNameInput" placeholder="Nome do grupo (ex: Igreja Central)" maxlength="30" required>
+          <textarea id="groupDescInput" placeholder="Descrição (opcional)" maxlength="100"></textarea>
+          <div class="form-actions">
+            <button type="button" class="btn-text" id="cancelCreateGroup">Cancelar</button>
+            <button type="submit" class="btn btn-primary btn-sm">Criar</button>
+          </div>
+        </form>
+
+        <!-- Join Group Form -->
+        <form class="group-form" id="joinGroupForm" hidden>
+          <input type="text" id="groupCodeInput" placeholder="Código do grupo" maxlength="8" required>
+          <div class="form-actions">
+            <button type="button" class="btn-text" id="cancelJoinGroup">Cancelar</button>
+            <button type="submit" class="btn btn-primary btn-sm">Entrar</button>
+          </div>
+        </form>
+
+        <!-- Current Group Info -->
+        <div class="current-group" id="currentGroup" hidden>
+          <div class="group-header">
+            <div>
+              <h3 class="group-name" id="groupNameDisplay"></h3>
+              <p class="group-code" id="groupCodeDisplay"></p>
+            </div>
+            <button class="btn-icon" id="leaveGroupBtn" aria-label="Sair do grupo">✕</button>
+          </div>
+          <p class="group-members" id="groupMembersCount">Membros: 1</p>
+        </div>
+
+        <!-- Shared Reflections -->
+        <div class="shared-reflections" id="sharedReflectionsSection" hidden>
+          <h3 class="reflections-title">Reflexões Compartilhadas</h3>
+          <ul class="shared-reflections-list" id="sharedReflectionsList"></ul>
+          <div class="empty-state" id="sharedReflectionsEmpty" hidden>
+            <div class="empty-mark">🤝</div>
+            <p>Nenhuma reflexão compartilhada ainda.<br><small>Compartilhe suas meditações com o grupo!</small></p>
+          </div>
+        </div>
+
+        <div class="share-section" id="shareSection" hidden>
+          <label class="field__label">Compartilhar Reflexão com Grupo</label>
+          <select id="reflectionsToShare" class="reflection-select"></select>
+          <button class="btn btn-primary btn-sm" id="shareReflectionBtn" style="width: 100%; margin-top: 8px;">Compartilhar Anonimamente</button>
+        </div>
+      </div>
+    </div>
+
     <div class="card reflections-card">
       <h2 class="card-title">Minhas Reflexões</h2>
 

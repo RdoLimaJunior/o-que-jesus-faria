@@ -1280,6 +1280,133 @@ textarea::placeholder, input::placeholder { color: #b0965a; font-style: italic; 
   border: 1px solid var(--gold-line);
 }
 
+/* Prayer Groups */
+.group-intro {
+  font-size: 0.9rem;
+  color: var(--text-soft);
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+
+.group-actions {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.group-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 16px;
+  background: rgba(212,168,67,0.05);
+  border-radius: 12px;
+  border: 1px solid var(--gold-line);
+}
+
+.group-form input,
+.group-form textarea {
+  padding: 12px;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid var(--gold-line);
+  border-radius: 8px;
+  font-family: inherit;
+  resize: vertical;
+}
+
+.form-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.current-group {
+  padding: 16px;
+  background: rgba(212,168,67,0.1);
+  border: 1px solid var(--gold);
+  border-radius: 12px;
+  margin-bottom: 16px;
+}
+
+.group-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.group-name {
+  font-size: 1.1rem;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.group-code {
+  font-size: 0.85rem;
+  color: var(--text-soft);
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: bold;
+}
+
+.group-members {
+  font-size: 0.9rem;
+  color: var(--text-soft);
+  margin-top: 8px;
+}
+
+.btn-icon {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 4px 8px;
+  color: var(--text-soft);
+}
+
+.shared-reflections {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--gold-line);
+}
+
+.reflections-title {
+  font-size: 0.95rem;
+  color: var(--text);
+  margin-bottom: 12px;
+}
+
+.shared-reflections-list {
+  list-style: none;
+  margin-bottom: 16px;
+}
+
+.shared-reflection-item {
+  padding: 12px;
+  background: rgba(212,168,67,0.05);
+  border-left: 3px solid var(--gold);
+  margin-bottom: 10px;
+  border-radius: 4px;
+}
+
+.shared-reflection-meta {
+  font-size: 0.8rem;
+  color: var(--text-soft);
+  margin-bottom: 6px;
+}
+
+.shared-reflection-text {
+  font-size: 0.95rem;
+  color: var(--text);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.share-section {
+  padding-top: 16px;
+  border-top: 1px solid var(--gold-line);
+}
+
 .field__input-wrap {
   position: relative;
 }
