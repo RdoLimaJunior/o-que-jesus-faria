@@ -105,6 +105,82 @@
     }
   });
 
+  // ════════ NOTIFICATIONS ════════
+  async function requestNotificationPermission() {
+    if (!('Notification' in window)) return false;
+    if (Notification.permission === 'granted') return true;
+    if (Notification.permission === 'denied') return false;
+
+    const perm = await Notification.requestPermission();
+    return perm === 'granted';
+  }
+
+  function scheduleDailyNotification() {
+    if (!('Notification' in window)) return;
+
+    function sendNotif() {
+      const devotions = DEVOTIONS;
+      const devotion = devotions[dayIndex()];
+      if (Notification.permission === 'granted') {
+        new Notification('Versículo do Dia ✦', {
+          body: `${devotion.v}\n— ${devotion.r}`,
+          icon: '✦',
+          tag: 'daily-verse',
+          requireInteraction: false
+        });
+      }
+    }
+
+    // Schedule for 7:00 AM
+    function scheduleNext() {
+      const now = new Date();
+      const target = new Date();
+      target.setHours(7, 0, 0, 0);
+
+      if (target <= now) {
+        target.setDate(target.getDate() + 1);
+      }
+
+      const delay = target.getTime() - now.getTime();
+      setTimeout(() => {
+        sendNotif();
+        scheduleNext();
+      }, delay);
+    }
+
+    scheduleNext();
+  }
+
+  const notificationsToggle = document.getElementById('notificationsToggle');
+  const isNotifEnabled = localStorage.getItem('notificationsEnabled') === '1';
+  if (notificationsToggle) {
+    notificationsToggle.checked = isNotifEnabled;
+    notificationsToggle.addEventListener('change', async (e) => {
+      if (e.target.checked) {
+        const granted = await requestNotificationPermission();
+        if (granted) {
+          localStorage.setItem('notificationsEnabled', '1');
+          scheduleDailyNotification();
+          toast('🔔 Notificações ativadas para 7:00');
+        } else {
+          e.target.checked = false;
+          toast('❌ Permissão de notificações recusada');
+        }
+      } else {
+        localStorage.setItem('notificationsEnabled', '0');
+        toast('🔔 Notificações desativadas');
+      }
+    });
+  }
+
+  if (isNotifEnabled) {
+    requestNotificationPermission().then(granted => {
+      if (granted) {
+        scheduleDailyNotification();
+      }
+    });
+  }
+
   document.getElementById('openSettings').addEventListener('click', openSettings);
   settingsModal.addEventListener('click', (e) => {
     if (e.target.dataset.close !== undefined) closeSettings();
