@@ -619,7 +619,7 @@ Responda APENAS em JSON válido (sem markdown, sem comentários):
     } else if (hasText) {
       askJesus();
     } else {
-      if (recognition) {
+      if (recognition && !isRecording) {
         lastYPosition = e.clientY;
         recognition.start();
       }
