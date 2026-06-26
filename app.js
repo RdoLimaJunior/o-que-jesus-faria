@@ -565,10 +565,10 @@ Responda APENAS em JSON válido (sem markdown, sem comentários):
 
   speakBtn.addEventListener('click', () => speakText(fullResponseText, speakBtn));
 
-  // ════════ WhatsApp-STYLE MESSAGE INPUT ════════
-  const msgSendBtn = document.getElementById('msgSendBtn');
-  const msgMicIcon = document.querySelector('.msg-mic-icon');
-  const msgSendIcon = document.querySelector('.msg-send-icon');
+  // ════════ SIMPLE WhatsApp-STYLE INPUT ════════
+  const sendBtn = document.getElementById('sendBtn');
+  const micIcon = document.querySelector('.mic-icon');
+  const sendIcon = document.querySelector('.send-icon');
   const recordingIndicator = document.getElementById('recordingIndicator');
   const recordingTimer = document.getElementById('recordingTimer');
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -579,21 +579,20 @@ Responda APENAS em JSON válido (sem markdown, sem comentários):
   let recognition = null;
   let lastYPosition = 0;
 
-  // Update button state based on input
-  function updateSendButton() {
+  // Update icons based on input
+  function updateIcons() {
     const hasText = situationEl.value.trim().length > 0;
     if (hasText) {
-      msgMicIcon.style.display = 'none';
-      msgSendIcon.style.display = 'block';
-      msgSendBtn.classList.remove('recording');
+      micIcon.hidden = true;
+      sendIcon.hidden = false;
     } else {
-      msgMicIcon.style.display = 'block';
-      msgSendIcon.style.display = 'none';
+      micIcon.hidden = false;
+      sendIcon.hidden = true;
     }
   }
 
-  situationEl.addEventListener('input', updateSendButton);
-  updateSendButton();
+  situationEl.addEventListener('input', updateIcons);
+  updateIcons();
 
   if (SR) {
     recognition = new SR();
@@ -605,7 +604,6 @@ Responda APENAS em JSON válido (sem markdown, sem comentários):
       isRecording = true;
       recordingStartTime = Date.now();
       recordingIndicator.hidden = false;
-      msgSendBtn.classList.add('recording');
 
       recordingTimerInterval = setInterval(() => {
         const elapsed = Math.floor((Date.now() - recordingStartTime) / 1000);
@@ -616,53 +614,38 @@ Responda APENAS em JSON válido (sem markdown, sem comentários):
     };
 
     recognition.onresult = (event) => {
-      let interim = '';
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const transcript = event.results[i][0].transcript;
         if (event.results[i].isFinal) {
-          situationEl.value = (situationEl.value + ' ' + transcript).trim();
-        } else {
-          interim += transcript + ' ';
+          situationEl.value = transcript;
+          updateIcons();
         }
       }
-      updateSendButton();
     };
 
     recognition.onend = () => {
       isRecording = false;
       recordingIndicator.hidden = true;
-      msgSendBtn.classList.remove('recording');
       clearInterval(recordingTimerInterval);
     };
 
     recognition.onerror = (event) => {
-      console.error('Speech recognition error:', event.error);
       isRecording = false;
       recordingIndicator.hidden = true;
-      msgSendBtn.classList.remove('recording');
       clearInterval(recordingTimerInterval);
       toast(`❌ Erro: ${event.error}`);
     };
   }
 
-  // Send button click handler
-  msgSendBtn?.addEventListener('click', (e) => {
-    e.preventDefault();
+  // Send button handler
+  sendBtn?.addEventListener('click', (e) => {
     const hasText = situationEl.value.trim().length > 0;
 
     if (isRecording) {
-      // If recording, stop and auto-send
       recognition.stop();
-      setTimeout(() => {
-        if (situationEl.value.trim()) {
-          askJesus();
-        }
-      }, 200);
     } else if (hasText) {
-      // Send text message
       askJesus();
     } else {
-      // Start recording
       if (recognition) {
         lastYPosition = e.clientY;
         recognition.start();
@@ -670,68 +653,44 @@ Responda APENAS em JSON válido (sem markdown, sem comentários):
     }
   });
 
-  // Mouse events for hold-to-record on mic
-  msgSendBtn?.addEventListener('mousedown', (e) => {
+  // Hold-to-record mouse events
+  sendBtn?.addEventListener('mousedown', (e) => {
     if (!situationEl.value.trim() && recognition && !isRecording) {
-      e.preventDefault();
       lastYPosition = e.clientY;
       recognition.start();
     }
   });
 
-  msgSendBtn?.addEventListener('mousemove', (e) => {
-    if (isRecording) {
-      const moveDistance = lastYPosition - e.clientY;
-      const hint = document.querySelector('.recording-hint');
-      if (hint) {
-        hint.textContent = moveDistance > 50 ? '↑ Solte para cancelar' : '↑ Deslize para cima para cancelar';
-      }
-    }
-  });
-
-  msgSendBtn?.addEventListener('mouseup', (e) => {
+  sendBtn?.addEventListener('mouseup', (e) => {
     if (isRecording) {
       const moveDistance = lastYPosition - e.clientY;
       if (moveDistance > 50) {
-        // Cancel
         recognition.abort();
         situationEl.value = '';
+        updateIcons();
         toast('Gravação cancelada');
-        updateSendButton();
       } else {
-        // Auto-send
         recognition.stop();
       }
     }
   });
 
-  // Touch events
-  msgSendBtn?.addEventListener('touchstart', (e) => {
+  // Hold-to-record touch events
+  sendBtn?.addEventListener('touchstart', (e) => {
     if (!situationEl.value.trim() && recognition && !isRecording) {
-      e.preventDefault();
       lastYPosition = e.touches[0].clientY;
       recognition.start();
     }
   });
 
-  msgSendBtn?.addEventListener('touchmove', (e) => {
-    if (isRecording && e.touches.length > 0) {
-      const moveDistance = lastYPosition - e.touches[0].clientY;
-      const hint = document.querySelector('.recording-hint');
-      if (hint) {
-        hint.textContent = moveDistance > 50 ? '↑ Solte para cancelar' : '↑ Deslize para cima para cancelar';
-      }
-    }
-  });
-
-  msgSendBtn?.addEventListener('touchend', (e) => {
+  sendBtn?.addEventListener('touchend', (e) => {
     if (isRecording && e.changedTouches.length > 0) {
       const moveDistance = lastYPosition - e.changedTouches[0].clientY;
       if (moveDistance > 50) {
         recognition.abort();
         situationEl.value = '';
+        updateIcons();
         toast('Gravação cancelada');
-        updateSendButton();
       } else {
         recognition.stop();
       }
