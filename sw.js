@@ -32,6 +32,11 @@ self.addEventListener('fetch', (e) => {
   if (url.hostname.includes('anthropic.com') || url.hostname.includes('elevenlabs.io')) return;
   if (e.request.method !== 'GET') return;
 
+  // Ignore non-http/https requests (e.g., chrome-extension://)
+  if (!e.request.url.startsWith('http')) {
+    return;
+  }
+
   e.respondWith(
     caches.match(e.request).then(cached => {
       const fetchPromise = fetch(e.request).then(res => {

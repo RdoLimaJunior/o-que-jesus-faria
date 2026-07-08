@@ -21,8 +21,8 @@ window.API_CONFIG = {
     voice: 'Padre',
     language: 'pt-BR',
     encoding: 'MP3',
-    sampleRate: 24000,
+    sample_rate_hz: 24000,
     rate: 1.0,
-    emotion: 'calm'
+    emotion_control: 'calm'
   }
 };

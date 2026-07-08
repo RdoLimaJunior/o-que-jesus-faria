@@ -2,6 +2,7 @@
    Wisdom Tab Module
    - Groq API logic and Speech Recognition
    ═══════════════════════════════════════════════ */
+import { callGroqAPI } from './api-service.js';
 
 import { speakText } from './tts.js';
 import { toast } from './ui.js';
@@ -39,38 +40,6 @@ function showLoading(show) {
   } else {
     clearInterval(loadingTimer);
   }
-}
-
-async function callGroqAPI(situation) {
-  const apiKey = window.API_CONFIG?.GROQ_API_KEY;
-  if (!apiKey) throw new Error('Chave de API do Groq não configurada');
-
-  const systemPrompt = `Você é uma voz amorosa e sábia que reflete os ensinamentos de Jesus Cristo no Evangelho. REGRAS: Tom caloroso, simples, como um amigo sábio. Frases curtas, palavras simples, sem jargões teológicos. Em PORTUGUÊS DO BRASIL. Para qualquer situação: 1. Conselho de como Cristo aconselharia (3 a 4 frases simples). 2. UM versículo bíblico apropriado. Responda APENAS em JSON válido: {"conselho": "...", "versiculo": "...", "referencia": "Livro Cap:Ver"}`;
-
-  const res = await fetch(window.API_CONFIG.endpoints.groq, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`
-    },
-    body: JSON.stringify({
-      model: window.API_CONFIG.models.groq,
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: situation }
-      ],
-      temperature: 0.7,
-      max_tokens: 1024
-    })
-  });
-
-  if (!res.ok) {
-    const errorData = await res.text();
-    throw new Error(`Status ${res.status}: ${errorData || 'Erro ao chamar Groq API'}`);
-  }
-
-  const data = await res.json();
-  return data.choices?.[0]?.message?.content || '';
 }
 
 async function askJesus() {
