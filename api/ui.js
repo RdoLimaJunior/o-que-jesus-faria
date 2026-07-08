@@ -16,26 +16,6 @@ export function toast(msg) {
   toastTimer = setTimeout(() => { toastEl.hidden = true; }, 2400);
 }
 
-function setupTabs() {
-  const tabBtns = document.querySelectorAll('.tab-btn');
-  const tabContents = document.querySelectorAll('.tab-content');
-  tabBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      const target = btn.dataset.tab;
-      tabBtns.forEach(b => {
-        b.classList.toggle('active', b === btn);
-        b.setAttribute('aria-selected', b === btn ? 'true' : 'false');
-      });
-      tabContents.forEach(c => {
-        const isActive = c.id === 'tab-' + target;
-        c.classList.toggle('active', isActive);
-        if (isActive) c.removeAttribute('hidden');
-        else c.setAttribute('hidden', '');
-      });
-    });
-  });
-}
-
 function setupParticles() {
   const particlesEl = document.getElementById('particles');
   for (let i = 0; i < 18; i++) {
@@ -112,7 +92,6 @@ function cleanupOldData() {
 }
 
 export function initUI() {
-  setupTabs();
   setupParticles();
   setupSettings();
   console.log("UI Module Initialized");

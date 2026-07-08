@@ -7,6 +7,7 @@ export default async function handler(req, res) {
     await sql`
       CREATE TABLE IF NOT EXISTS Prayers (
         id SERIAL PRIMARY KEY,
+        user_id VARCHAR(255) NOT NULL,
         text TEXT NOT NULL,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
         is_answered BOOLEAN DEFAULT FALSE

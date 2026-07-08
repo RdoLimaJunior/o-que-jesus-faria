@@ -3,7 +3,7 @@
    - Fetches Psalms from the backend (Neon DB)
    ═══════════════════════════════════════════════ */
 
-import { getPsalmsList, getPsalmText } from './api-service.js';
+import { getPsalmsList, getPsalmText, getReflection, saveReflection } from './api-service.js';
 import { speakText } from './tts.js';
 import { toast } from './ui.js';
 
@@ -52,9 +52,11 @@ async function displayPsalm(psalmNumber) {
     psalmIntro.textContent = `${psalm.title}\n\nAutor: ${psalm.author}\nTipo: ${psalm.type}\n\nEste Salmo oferece consolo, força e esperança através da Palavra de Deus.`;
     psalmText.textContent = psalm.text || `[Texto do Salmo ${psalmNumber} não disponível.]`;
 
-    // Load saved reflection from localStorage
-    const savedReflection = localStorage.getItem(`psalm_${psalmNumber}_reflection`) || '';
-    reflectionEl.value = savedReflection;
+    // Load reflection from DB if user is logged in
+    if (window.Clerk?.user) {
+      const saved = await getReflection(psalmNumber);
+      reflectionEl.value = saved.text;
+    }
 
   } catch (error) {
     console.error(`Error loading psalm ${psalmNumber}:`, error);
@@ -72,12 +74,21 @@ export function initPsalms() {
     if (currentPsalm?.text) speakText(currentPsalm.text, psalmSpeakBtn);
   });
 
-  saveReflectionBtn.addEventListener('click', () => {
+  saveReflectionBtn.addEventListener('click', async () => {
+    if (!window.Clerk?.user) {
+      toast('Entre para salvar suas reflexões.');
+      return;
+    }
     const text = reflectionEl.value.trim();
     if (!currentPsalm || !text) return;
-    localStorage.setItem(`psalm_${currentPsalm.number}_reflection`, text);
-    saveConfirm.hidden = false;
-    toast('✦ Reflexão guardada');
+
+    try {
+      await saveReflection(currentPsalm.number, text);
+      saveConfirm.hidden = false;
+      toast('✦ Reflexão guardada');
+    } catch (error) {
+      toast('❌ Erro ao salvar. Tente novamente.');
+    }
   });
 
   console.log("Psalms Module Initialized");
